@@ -171,6 +171,19 @@ Before considering a coding task complete:
 
 As project commands are established, keep this section updated with the exact commands.
 
+Current verification commands:
+
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+Start the development server with `npm run dev` and verify the relevant behavior
+manually. On Windows PowerShell, use `npm.cmd` in place of `npm` if execution
+policy blocks `npm.ps1`.
+
 ---
 
 ## Decision Rule
