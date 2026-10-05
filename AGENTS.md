@@ -20,7 +20,7 @@ These documents are the project's source of truth.
 
 The project is currently in:
 
-**v0.1 — Foundation**
+**v0.2 — Focus Timer**
 
 Do not implement features from later versions unless the user explicitly changes the current scope.
 

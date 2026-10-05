@@ -1,4 +1,6 @@
-import type { AppData, AppStorage, LoadResult } from './storage'
+import type { AppData, AppStorage, LegacyAppData, LoadResult } from './storage'
+import { isTimerState } from '../domain/timer'
+import { migrateV1ToV2 } from './migrations'
 
 export const STORAGE_KEY = 'focus-companion:data'
 
@@ -20,8 +22,9 @@ function isNonnegativeNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }
 
-function isAppData(value: unknown): value is AppData {
-  if (!isObject(value) || value.schemaVersion !== 1) return false
+function isStoredData(value: unknown): value is AppData | LegacyAppData {
+  if (!isObject(value) || (value.schemaVersion !== 1 && value.schemaVersion !== 2)) return false
+  if (value.schemaVersion === 2 && !isTimerState(value.timer)) return false
   const { tasks, categories, sessions, settings } = value
   return (
     Array.isArray(tasks) && tasks.every((task: unknown) =>
@@ -61,10 +64,13 @@ export function createLocalStorageAdapter(
     } catch {
       return { status: 'invalid' }
     }
-    if (isObject(parsed) && typeof parsed.schemaVersion === 'number' && parsed.schemaVersion !== 1) {
+    if (isObject(parsed) && typeof parsed.schemaVersion === 'number' && parsed.schemaVersion !== 1 && parsed.schemaVersion !== 2) {
       return { status: 'unsupported' }
     }
-    return isAppData(parsed) ? { status: 'ready', data: parsed } : { status: 'invalid' }
+    if (!isStoredData(parsed)) return { status: 'invalid' }
+    return parsed.schemaVersion === 1
+      ? { status: 'ready', data: migrateV1ToV2(parsed), needsMigration: true }
+      : { status: 'ready', data: parsed }
   }
 
   return {
@@ -73,7 +79,7 @@ export function createLocalStorageAdapter(
       // Recheck existing data so a failed load can never trigger a destructive overwrite.
       const existing = load()
       if (existing.status === 'unavailable') return { status: 'unavailable' }
-      if (existing.status === 'invalid' || existing.status === 'unsupported' || !isAppData(data)) {
+      if (existing.status === 'invalid' || existing.status === 'unsupported' || data.schemaVersion !== 2 || !isStoredData(data)) {
         return { status: 'blocked' }
       }
       try {

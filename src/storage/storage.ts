@@ -2,17 +2,21 @@ import type { Category } from '../domain/category'
 import type { FocusSession } from '../domain/focusSession'
 import type { Settings } from '../domain/settings'
 import type { Task } from '../domain/task'
+import type { TimerState } from '../domain/timer'
 
 export interface AppData {
-  schemaVersion: 1
+  schemaVersion: 2
   tasks: Task[]
   categories: Category[]
   sessions: FocusSession[]
   settings: Settings
+  timer: TimerState
 }
 
+export type LegacyAppData = Omit<AppData, 'schemaVersion' | 'timer'> & { schemaVersion: 1 }
+
 export type LoadResult =
-  | { status: 'ready'; data: AppData }
+  | { status: 'ready'; data: AppData; needsMigration?: boolean }
   | { status: 'missing' }
   | { status: 'invalid' | 'unsupported' | 'unavailable' }
 
@@ -25,7 +29,8 @@ export interface AppStorage {
 
 export function createDefaultData(): AppData {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    timer: { status: 'idle', mode: 'focus' },
     tasks: [],
     categories: [],
     sessions: [],

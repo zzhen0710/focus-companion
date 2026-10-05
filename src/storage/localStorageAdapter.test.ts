@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createLocalStorageAdapter, STORAGE_KEY } from './localStorageAdapter'
 import { createDefaultData } from './storage'
+import { reconcileTimer, transitionTimer } from '../domain/timer'
 
 function fixture(initial: string | null = null) {
   const values = new Map<string, string>()
@@ -13,6 +14,27 @@ function fixture(initial: string | null = null) {
 }
 
 describe('local storage boundary', () => {
+  it('round-trips running, paused and completed timer states', () => {
+    const { adapter } = fixture()
+    const data = createDefaultData()
+    const running = transitionTimer(data.timer, { type: 'start', id: 'period' }, data.settings, 1000)
+    const paused = transitionTimer(running, { type: 'pause' }, data.settings, 1500)
+    const completed = reconcileTimer(running, 1501000)
+    for (const timer of [running, paused, completed]) {
+      const document = { ...data, timer }
+      expect(adapter.save(document).status).toBe('saved')
+      expect(adapter.load()).toEqual({ status: 'ready', data: document })
+    }
+  })
+
+  it('preserves invalid v2 timer data instead of replacing it', () => {
+    const raw = JSON.stringify({ ...createDefaultData(), timer: { status: 'running', mode: 'focus' } })
+    const { adapter, values } = fixture(raw)
+    expect(adapter.load().status).toBe('invalid')
+    expect(adapter.save(createDefaultData()).status).toBe('blocked')
+    expect(values.get(STORAGE_KEY)).toBe(raw)
+  })
+
   it('distinguishes missing data and persists defaults without seeding records', () => {
     const { adapter } = fixture()
     expect(adapter.load()).toEqual({ status: 'missing' })
@@ -50,7 +72,7 @@ describe('local storage boundary', () => {
   })
 
   it('preserves unsupported schema versions', () => {
-    const raw = JSON.stringify({ ...createDefaultData(), schemaVersion: 2 })
+    const raw = JSON.stringify({ ...createDefaultData(), schemaVersion: 3 })
     const { adapter, values } = fixture(raw)
     expect(adapter.load()).toEqual({ status: 'unsupported' })
     expect(adapter.save(createDefaultData())).toEqual({ status: 'blocked' })

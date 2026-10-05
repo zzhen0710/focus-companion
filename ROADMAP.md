@@ -62,11 +62,14 @@ Build the core Pomodoro-style focus experience.
 - start
 - pause
 - resume
-- finish early
 - reset
 - focus / break state switching
 - current session display
 - basic session completion feedback
+
+Only naturally completed focus periods create FocusSession records in v0.2.
+Reset abandons an unfinished period without creating a record. Break completion
+does not create a FocusSession. Interrupted-period recording is deferred.
 
 ### Reliability
 
@@ -78,6 +81,17 @@ The timer must behave correctly when:
 - the application is reopened
 
 Timer state should not depend only on continuously decrementing a JavaScript counter.
+
+The completed v0.2 boundary is conservative: background tabs and switching to
+other applications continue counting, and a surviving Running page reconciles
+system sleep using timestamps. Running progress is checkpointed. A new page
+instance, including refresh or close/reopen, restores saved Running progress
+as Paused and requires Resume; elapsed time while the old page was absent alone
+must never award completion. Existing Completed state and completion idempotency
+are preserved. BFCache restoration also remains paused. Lifecycle signals can
+improve save precision but are not required for conservative cold recovery.
+Environment-specific sleep/wake acceptance observations and browser limitations
+are recorded in CHANGELOG.md and ARCHITECTURE.md.
 
 ---
 
@@ -105,11 +119,17 @@ It should not become a complex project-management system.
 
 ## v0.4 — Focus History
 
-Turn completed focus sessions into useful historical data.
+Turn focus periods into useful historical data.
+
+Approved future requirement: record interrupted focus periods rather than
+discarding them. Both completed and interrupted periods must contribute their
+actual focused time to total focus time, and their outcomes must remain
+distinguishable. This belongs to the Focus History / Insights stage; the model
+and precise interruption rules remain to be designed there, not in v0.2.
 
 ### Features
 
-- store completed sessions
+- store completed and interrupted focus periods with distinguishable outcomes
 - record:
   - start time
   - end time
@@ -147,6 +167,15 @@ Build the first real dashboard for understanding time usage.
 - this week
 - recent 7 days
 - recent 30 days
+
+### Approved focus-outcome insights
+
+- total focus time includes actual focused time from completed and interrupted periods
+- derive completed count and interrupted count from distinguishable records
+- derive completion rate; the exact calculation will be defined in this stage
+
+The interrupted-session model and these metrics are future requirements, not
+functionality implemented in v0.2.
 
 The purpose of Insights is reflection, not gamification.
 
@@ -197,6 +226,23 @@ The interface should feel calm rather than flashy.
 
 Beauty should improve usability.
 
+### Approved personal focus environment foundation
+
+Establish the visual customization foundation while keeping the current clean
+background and a calm, minimal, clear, immediately usable experience as the default.
+Customization should support focus rather than become the focus of the product;
+high customizability must not make the default experience complex.
+
+- establish background presentation and visual separation from foreground UI
+- provide a small set of optional blur/depth-like and dimming controls
+- establish foreground surface presets such as clean/opaque, dark or gradient
+  overlay, and translucent/frosted-glass
+- keep controls as presets or simple adjustments, not an unrestricted visual editor
+
+This foundation supports user-imported local image and video backgrounds, whose
+core user-facing experience must be ready no later than v0.9. It does not include
+a wallpaper marketplace, remote discovery, or social wallpaper sharing.
+
 ---
 
 ## v0.8 — Reliability and Data Safety
@@ -217,17 +263,43 @@ Prepare the application for long-term personal use.
 
 Existing user data should not casually break when the application evolves.
 
+### Reliability required for user-imported backgrounds
+
+Address the reliability, persistence, invalid-media handling, storage limits,
+and recovery concerns required by local image and video backgrounds. Existing
+focus records and settings remain valuable and must be preserved.
+
+Media formats and limits, playback behavior, persistence design, and storage
+technology are intentionally undecided until this work is implemented. This
+roadmap does not select IndexedDB or any alternative media-storage technology.
+
 ---
 
 ## v0.9 — Daily-Use Beta
 
-Stop expanding features.
+Deliver the approved core background customization experience no later than
+this version, then stop expanding features and focus on real usage.
 
 Use Focus Companion as a real daily tool.
 
 ### Goal
 
 Find problems through real usage.
+
+### Required core background customization experience
+
+By v0.9, beta users must be able to import their own local image and video
+backgrounds and use them as a personal focus environment. Preserve the clean
+default background and the controlled presentation/surface adjustments developed
+in v0.7, with the media reliability work from v0.8.
+
+The core experience must be usable and ready for beta users **no later than
+v0.9**. Implementation details may evolve, but this is an approved delivery
+requirement, not an optional idea. Any remaining work needed to meet it belongs
+within this version's scope; the beta feature freeze does not cancel it.
+
+Do not add a wallpaper marketplace, remote wallpaper discovery, social wallpaper
+sharing, or an unrestricted visual editor.
 
 ### During this phase
 
@@ -246,7 +318,31 @@ Avoid:
 - speculative features
 - premature social development
 
+This restriction excludes work required to finish the approved core background
+customization experience above; avoid unrelated feature expansion.
+
 v0.9 ends when the application feels dependable enough for normal daily use.
+
+---
+
+## Approved Later Sound Requirement — Version Undecided
+
+After v0.2, add an appropriate timer-completion sound with volume control and
+mute. The exact delivery version and sound asset remain undecided. Custom
+completion sounds may be considered later, but are not committed scope.
+Avoid attention-seeking audio design and unnecessary sound features.
+
+---
+
+## Future Customization Implementation Boundary
+
+The customization stages above are approved product requirements, not completed
+features. Preserve Built for accountability, not attention.
+
+Do not implement them during v0.2: no new dependencies, placeholder components,
+future settings UI, wallpaper/media domain types, storage fields, schema changes,
+IndexedDB or other media-storage implementation, or premature technology choice.
+Do not change the v0.2 timer behavior or schema to prepare for them.
 
 ---
 

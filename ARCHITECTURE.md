@@ -265,6 +265,71 @@ This does not mean networking should be implemented now.
 
 # 7. Time Handling
 
+## Implemented v0.2 timer boundary
+
+The timer has Focus, Short break, and Long break modes with idle, running,
+paused, and completed states. Pure functions in `src/domain/timer.ts` derive
+elapsed time from accumulated running milliseconds and the current segment's
+start timestamp. Paused time is excluded. Background tabs and switching to other
+applications do not pause the timer. While the same page instance survives,
+Running time includes background delays and system sleep; completion uses the
+calculated deadline even when observed later. New periods always start manually.
+
+An application-scoped controller owns persistence and completion reconciliation.
+The React hook remains mounted across in-app navigation. Lifecycle binding is
+separated into `timerLifecycle.ts`; display ticks and visibility/focus/resume
+signals reconcile live timestamps. While Running, the controller checkpoints
+verified progress at a target interval of five seconds, with opportunistic
+lifecycle saves. A checkpoint moves elapsed time into `accumulatedMs` and resets
+`runStartedAt`, preserving the effective deadline. Display ticks are not
+persisted countdown decrements. Throttling, freezing, and failed writes may
+delay checkpoints beyond five seconds.
+
+On a new page instance, including refresh or close/reopen, persisted Running
+state is converted to Paused using only its saved accumulated progress BEFORE
+timestamp reconciliation. The old page's absent interval is not automatically
+verified focus time; reopening beyond the old deadline alone cannot create a
+FocusSession. Resume starts a new running segment for the remaining time, with
+the same timer ID and captured duration. Existing Completed state is preserved.
+Cold recovery remains conservative across failed reads and save retries; failed
+recovery writes retain the paused state in memory and block Resume until saved.
+This uses the existing schema v2 fields, without new dependencies.
+
+Lifecycle events improve checkpoint precision, not cold-recovery correctness.
+The implementation does not rely on beforeunload/unload, a heartbeat timeout,
+or any single lifecycle signal to detect closure. `pagehide` attempts to reconcile
+live completion or persist Paused at departure. BFCache restoration remains
+paused; if departure was missed, `pageshow.persisted` invokes conservative
+recovery from persisted progress. Ordinary background visibility changes and
+freeze/resume do not pause. This is a best-effort browser lifecycle boundary,
+not a guarantee that every browser will deliver every event.
+
+Failed user transitions retain the prior state; failed checkpoints surface an
+error and block controls until retry. Failed completion remains visible and
+retryable in the surviving page, blocking new periods. If that page is lost
+before completion was saved, a new instance must recover saved progress as
+paused rather than infer the unsaved completion. Writes read the latest valid
+document to preserve unrelated records; paused-recovery retry does not downgrade
+an already saved completion or overwrite a different timer identity.
+
+Only naturally completed focus periods create FocusSession records. Completion
+and the record are saved together, using the timer ID to avoid duplicate records
+on repeated reconciliation. Break completion creates no record. Reset abandons
+an unfinished period and never removes existing history. No early-completion or
+interrupted-session model exists in v0.2.
+
+Final real Windows acceptance testing reflected elapsed wall-clock sleep time
+after wake. Expired periods could recover as Completed; unexpired periods were
+observed as Paused and required explicit Resume. These observations do not
+establish a universal browser guarantee or identify the exact lifecycle path.
+There is no OS sleep detector or forced-pause-on-wake action: surviving Running
+instances still reconcile timestamps, while cold/BFCache recovery is conservative.
+
+These guarantees target one controlling browser tab. Re-reading storage before
+writes preserves the latest unrelated records, but does not provide atomic
+coordination between tabs. Conservative recovery can undercount legitimate time
+when the latest checkpoint is stale. Advanced wall-clock-change recovery is deferred.
+
 Time is a critical part of Focus Companion and must be treated carefully.
 
 The timer must not rely only on:
@@ -341,6 +406,15 @@ Do not implement those future adapters yet.
 ---
 
 # 9. Data Schema Versioning
+
+The implemented v0.2 document uses `schemaVersion: 2` at the existing key
+`focus-companion:data`, adding a discriminated `timer` state to the original
+tasks, categories, sessions, and settings. The adapter validates v1 data and
+returns a pure v1-to-v2 migration with an idle Focus timer. The controller then
+saves it explicitly. Existing records and settings are preserved; a failed
+migration write leaves the stored v1 document intact. Invalid data and unknown
+versions continue to block writes. This is a single migration, not a general
+migration framework.
 
 Persisted application data should include a schema version.
 

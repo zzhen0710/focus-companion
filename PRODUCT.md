@@ -80,6 +80,16 @@ The product should grow from actual usage and real problems.
 
 Do not add complexity only because a technology or feature seems interesting.
 
+### 6. Customization Supports Focus
+
+Focus Companion should evolve into a customizable personal focus environment.
+The default experience must remain calm, minimal, clear, and immediately usable.
+High customizability must not make the default experience complex.
+
+> Customization should support focus rather than become the focus of the product.
+
+This direction preserves the core principle: Built for accountability, not attention.
+
 ---
 
 ## Core Experience
@@ -108,6 +118,22 @@ Examples include:
 ### Profile
 
 A minimal personal space representing the user's focus identity, goals, progress, and eventually their relationships with focus companions.
+
+---
+
+## Approved Focus History Direction
+
+In the future Focus History / Insights stage, interrupted focus periods must be
+recorded rather than discarded. Actual focused time from both completed and
+interrupted periods must contribute to total focus time, and the two outcomes
+must remain distinguishable. Future Insights must be able to derive completed
+count, interrupted count, and completion rate from those records.
+
+These are approved future requirements, not implemented v0.2 behavior. v0.2
+records only naturally completed focus periods; resetting an unfinished period
+abandons it without a record. The interrupted-session model, the precise
+interruption rules, and the completion-rate calculation remain to be designed
+in the Focus History / Insights stage. Do not introduce that model in v0.2.
 
 ---
 
@@ -173,6 +199,69 @@ The interface should eventually feel:
 Visual quality matters because this is intended to become a tool users willingly open every day.
 
 Beauty should support usability rather than compete with it.
+
+---
+
+## Approved Personal Focus Environment Direction
+
+The following requirements are approved future product scope. They are not
+features implemented in v0.2. The core user-facing local image/video background
+customization experience must be usable and ready for beta users **no later than
+v0.9 — Daily-Use Beta**. The implementation details may evolve; this delivery
+requirement must remain.
+
+### Local Background Customization
+
+- Keep the current clean background as the default; importing media is optional.
+- Allow users to import their own local image backgrounds.
+- Allow users to import their own local video backgrounds.
+- The experience should feel like creating a personal focus environment,
+  similar in spirit to customizable wallpaper software.
+- Do not include a wallpaper marketplace, remote wallpaper discovery, or social
+  wallpaper sharing in this scope.
+
+### Controlled Background Presentation
+
+Provide a small, controlled set of adjustments, such as optional background
+blur or depth-like treatment and background dimming. Keep background media
+visually separate from the foreground application UI so functional content
+remains clear and usable. This is a presentation requirement, not a decision
+about implementation layers or media-storage technology.
+
+Do not turn customization into an unrestricted visual editor.
+
+### Foreground Content Surfaces
+
+The main functional area should support a small set of presentation styles,
+such as clean/opaque, dark or gradient overlay, and translucent/frosted-glass.
+Keep these as presets or simple controlled adjustments. Exact preset names,
+appearance, adjustment ranges, and interaction details remain undecided.
+
+### Restrained Completion Sound
+
+A later version must add an appropriate timer-completion sound, volume control,
+and mute. The exact delivery version and sound asset remain undecided. Custom
+completion sounds may be considered later; they are not a committed requirement.
+Avoid attention-seeking audio design and unnecessary sound features.
+
+### Staging and Implementation Boundary
+
+- v0.7 establishes the visual customization foundation, background presentation,
+  foreground surface styles, and controlled blur/dim adjustments.
+- v0.8 addresses the reliability, persistence, invalid-media handling, storage
+  limits, and recovery required by user-imported media.
+- No later than v0.9, the core image/video import and background experience must
+  be usable by beta users.
+
+Media formats and limits, playback details, UI placement, persistence design,
+and media-storage technology remain undecided. Choose them when the relevant
+roadmap stage is implemented, based on actual requirements and testing.
+
+During v0.2, do not add customization dependencies, placeholder components,
+future settings UI, wallpaper/media domain types, storage fields, schema changes,
+IndexedDB or any other media-storage implementation. Do not choose a media-storage
+technology prematurely. These requirements are preserved in PRODUCT.md and
+ROADMAP.md without changing the v0.2 implementation or schema.
 
 ---
 
