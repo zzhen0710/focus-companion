@@ -2,6 +2,12 @@
 
 Built for accountability, not attention.
 
+The approved long-term direction is Companion + Environment + Atmosphere,
+supported by reliable lightweight productivity tools. A persistent personal
+focus scene and quiet virtual companion are future experience stages; they are
+not implemented in v0.2. The current pages are a foundation for validating the
+productivity core. See PRODUCT.md and ROADMAP.md for the revised staging.
+
 ## Current scope: v0.2 — Focus Timer
 
 A local, single-user React + TypeScript + Vite application with a responsive

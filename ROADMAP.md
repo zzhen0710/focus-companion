@@ -6,13 +6,16 @@ The project should grow through small, usable versions rather than large feature
 
 Each version should remain stable enough to use before moving to the next one.
 
+v0.1 and v0.2 are completed. v0.3 has not started; the sections after v0.2 are
+approved future scope, not completed features or authorization to implement them.
+
 ---
 
 # Phase 0 — Personal Focus Foundation
 
 Goal:
 
-Build an excellent local single-user focus tool before adding networking or social features.
+Build a reliable local productivity core, then a companion-centered personal focus experience, before adding networking or social features.
 
 ---
 
@@ -95,305 +98,194 @@ are recorded in CHANGELOG.md and ARCHITECTURE.md.
 
 ---
 
-## v0.3 — Tasks
+## v0.3 — Tasks Core
 
-Add lightweight task management.
+Build reliable task behavior behind an internal local TypeScript application API.
 
-### Features
+### Planned scope
 
-- create task
-- edit task
-- delete task
-- complete task
-- reopen task
-- select current task
-- bind a focus session to a task
-- optional category
-- task focus-time accumulation
+- reliable task model and persistence; preserve existing data through explicit migration if needed
+- richer task content, lightweight completion and reopening semantics
+- scheduling: unscheduled, specific date, specific date with optional time range, or broader date range
+- derived views such as Today, Tomorrow, This Week, and This Month
+- create, edit, delete, complete, reopen, and select tasks; optional categories and task/focus binding
+- intentionally simple testing UI, retaining a card-oriented design language
 
-The task system should remain lightweight.
-
-It should not become a complex project-management system.
+Do not hard-code Daily / Weekly / Monthly as separate Task types. Do not commit
+to an independent infinite-canvas Task Wall. Exact task fields, scheduling rules,
+and service contracts will be decided in the v0.3 plan. Do not implement v0.3
+merely because this roadmap has been updated.
 
 ---
 
-## v0.4 — Focus History
+## v0.4 — History & Daily Review Core
 
-Turn focus periods into useful historical data.
+Preserve what happened and validate a lightweight daily review workflow.
 
-Approved future requirement: record interrupted focus periods rather than
-discarding them. Both completed and interrupted periods must contribute their
-actual focused time to total focus time, and their outcomes must remain
-distinguishable. This belongs to the Focus History / Insights stage; the model
-and precise interruption rules remain to be designed there, not in v0.2.
+### Planned scope
 
-### Features
+- focus and task history
+- record completed and interrupted focus periods with distinguishable outcomes
+- both outcomes contribute their actual focused time to total focus time
+- preserve start/end time, duration, and task/category relationships where applicable
+- session history, useful date filtering, and daily/task/category focus totals
+- daily review of unresolved prior-day tasks
+- review outcomes such as complete, move/reschedule, or drop where appropriate
+- local History/Review application boundaries introduced when needed
+- simple UI primarily used to validate the workflow
 
-- store completed and interrupted focus periods with distinguishable outcomes
-- record:
-  - start time
-  - end time
-  - duration
-  - task
-  - category
-- daily focus total
-- category focus total
-- task focus total
-- session history
-- basic date filtering
+The interrupted-session model, precise interruption rules, task-history semantics,
+and review outcomes still require a concrete version plan. Interrupted recording
+belongs here, not v0.2 or v0.3. Related Insights metrics belong to v0.5.
 
 ---
 
-## v0.5 — Insights
+## v0.5 — Insights Core
 
-Build the first real dashboard for understanding time usage.
+Support useful reflection with restrained analytics presentation.
 
-### Visualizations
+### Planned scope
 
-- pie chart:
-  - time distribution by category
+- focused time including actual time from completed and interrupted periods
+- completed/interrupted distinction, completed count, interrupted count, and completion rate
+- task completion and useful daily/weekly trends
+- task/focus relationships and category/time comparisons where justified
+- derived statistics behind a local Insights application boundary
+- intentionally restrained analytics UI
 
-- bar chart:
-  - daily focus comparison
-  - category comparison
-
-- line chart:
-  - 7-day focus trend
-  - 30-day focus trend
-
-### Summary data
-
-- today
-- this week
-- recent 7 days
-- recent 30 days
-
-### Approved focus-outcome insights
-
-- total focus time includes actual focused time from completed and interrupted periods
-- derive completed count and interrupted count from distinguishable records
-- derive completion rate; the exact calculation will be defined in this stage
-
-The interrupted-session model and these metrics are future requirements, not
-functionality implemented in v0.2.
-
-The purpose of Insights is reflection, not gamification.
+Define the exact completion-rate calculation in this stage. Chart forms should
+serve reflection, not a mandatory large dashboard or gamification. v0.3-v0.5
+pages may be temporary/basic: validate behavior and APIs without spending
+excessive effort polishing SaaS-style pages expected to change from v0.7.
 
 ---
 
-## v0.6 — Daily Experience
+## v0.6 — Experience Contracts & Art Direction
 
-Improve the experience of using Focus Companion every day.
+Prepare a stable productivity core for the experience layer and begin serious
+art-direction prototyping.
 
-### Features
+### Planned scope
 
-- better empty states
-- clearer status feedback
-- sensible default settings
-- quick task selection
-- keyboard-friendly interactions where useful
-- focus completion notification
-- better session controls
-- smoother navigation
-- better handling of unfinished sessions
+- stabilize only the application boundaries needed by the future experience layer
+- define high-level experience states and mappings from business state
+- prototype companion, environment, composition, visual language, animation, and sound direction
+- establish a visual hierarchy centered on a companion within a comfortable environment
 
-The goal is to reduce friction between:
-
-open app → choose work → start focusing.
-
----
-
-## v0.7 — Visual Polish
-
-Turn the application from functional into something genuinely pleasant to use.
-
-### Goals
-
-- refined layout
-- consistent spacing
-- typography system
-- polished cards
-- subtle shadows
-- restrained animation
-- smooth transitions
-- cohesive iconography
-- responsive layout
-- dark theme
-- light theme
-- excellent visual hierarchy
-
-The interface should feel calm rather than flashy.
-
-Beauty should improve usability.
-
-### Approved personal focus environment foundation
-
-Establish the visual customization foundation while keeping the current clean
-background and a calm, minimal, clear, immediately usable experience as the default.
-Customization should support focus rather than become the focus of the product;
-high customizability must not make the default experience complex.
-
-- establish background presentation and visual separation from foreground UI
-- provide a small set of optional blur/depth-like and dimming controls
-- establish foreground surface presets such as clean/opaque, dark or gradient
-  overlay, and translucent/frosted-glass
-- keep controls as presets or simple adjustments, not an unrestricted visual editor
-
-This foundation supports user-imported local image and video backgrounds, whose
-core user-facing experience must be ready no later than v0.9. It does not include
-a wallpaper marketplace, remote discovery, or social wallpaper sharing.
+Local application APIs are TypeScript interfaces, not HTTP or backend APIs.
+Experience / Scene / UI consumes Application Services -> Domain -> Persistence.
+Business logic must not depend on avatar animations, room art, music, or rendering.
+Do not require a final choice of 2D, Live2D-like, 3D, or another rendering approach.
+Do not create every named service, speculative asset infrastructure, or companion
+models inside the productivity domain merely to prepare for this stage.
 
 ---
 
-## v0.8 — Reliability and Data Safety
+## v0.7 — Companion & Main Scene
 
-Prepare the application for long-term personal use.
+Make the companion the primary visual subject in one polished default main scene.
 
-### Features
+### Planned scope
 
-- robust persistence
-- schema/version handling for stored data
-- invalid-data recovery
-- correct date-boundary handling
-- correct sleep/wake behavior
-- import data
-- export data
-- local backup
-- safe reset option
+- prioritize one high-quality default companion and one high-quality default environment
+- companion remains visually present for most of the core experience
+- connect Focus states to companion behavior through the experience layer
+- integrate lightweight Timer / Tasks / History / Review surfaces around the scene
+- use drawers, overlays, compact cards, side panels, or contextual controls where useful
+- prioritize the core experience over adding productivity features
 
-Existing user data should not casually break when the application evolves.
+Prefer one persistent scene over frequent navigation between themed rooms.
+Productivity UI should generally be visually subordinate to the companion and
+environment. Existing focus/companion products are category references only;
+do not copy their specific art, characters, rooms, music, animation, or UI.
 
-### Reliability required for user-imported backgrounds
+---
 
-Address the reliability, persistence, invalid-media handling, storage limits,
-and recovery concerns required by local image and video backgrounds. Existing
-focus records and settings remain valuable and must be preserved.
+## v0.8 — Atmosphere & Personalization
 
-Media formats and limits, playback behavior, persistence design, and storage
-technology are intentionally undecided until this work is implemented. This
-roadmap does not select IndexedDB or any alternative media-storage technology.
+Treat atmosphere as product capability while preserving a calm, immediately
+usable default. Customization should support focus rather than become the focus
+of the product; high customizability must not make the default complex.
+
+### Planned scope
+
+- music and ambient sound; appropriate completion sound, volume control, and mute
+- environmental micro-animation and richer companion idle/focus/break behavior
+- lighting/day-night atmosphere where appropriate
+- user-imported local image and video backgrounds
+- background/foreground separation and controlled blur/depth-like, dim, and glass presentation
+- foreground presets such as clean/opaque, dark or gradient overlay, and translucent/frosted-glass
+- light/dark presentation, responsive layout, keyboard access, and restrained completion notifications where appropriate
+- optional/reducible animation and sound
+- media/resource reliability, persistence, invalid-media handling, storage limits, and recovery
+
+Keep media import optional. Preserve the current clean default during core stages
+and one polished default companion environment from v0.7. Presets and simple
+adjustments should not become an unrestricted visual editor. No wallpaper
+marketplace, remote discovery, or social wallpaper sharing is included.
+
+The core user-facing local image/video background experience must be usable and
+ready for beta users **no later than v0.9**. v0.8 is its intended implementation
+stage; this refinement does not remove the previously approved delivery deadline.
+Formats, limits, playback details, sound assets, UI placement, and media-storage
+technology remain undecided. Custom completion sounds may be considered later,
+but are not committed scope. Avoid attention-seeking audio or unnecessary sound features.
 
 ---
 
 ## v0.9 — Daily-Use Beta
 
-Deliver the approved core background customization experience no later than
-this version, then stop expanding features and focus on real usage.
+Deploy publicly on the Web and validate the integrated product through real use.
 
-Use Focus Companion as a real daily tool.
+### Planned scope
 
-### Goal
+- public Web deployment without requiring accounts, backend, or social infrastructure
+- real-user daily-use testing
+- performance and asset-loading work
+- reliability and data safety, including browser/device compatibility
+- data export, import/recovery, local backup, and safe reset where appropriate
+- explicit schema handling, invalid-data protection, and date-boundary correctness
+- experience integration and polish
+- finish any work needed to deliver the approved image/video customization experience
 
-Find problems through real usage.
-
-### Required core background customization experience
-
-By v0.9, beta users must be able to import their own local image and video
-backgrounds and use them as a personal focus environment. Preserve the clean
-default background and the controlled presentation/surface adjustments developed
-in v0.7, with the media reliability work from v0.8.
-
-The core experience must be usable and ready for beta users **no later than
-v0.9**. Implementation details may evolve, but this is an approved delivery
-requirement, not an optional idea. Any remaining work needed to meet it belongs
-within this version's scope; the beta feature freeze does not cancel it.
-
-Do not add a wallpaper marketplace, remote wallpaper discovery, social wallpaper
-sharing, or an unrestricted visual editor.
-
-### During this phase
-
-Prioritize:
-
-- bugs
-- confusing interactions
-- visual inconsistencies
-- timer reliability
-- data correctness
-- unnecessary friction
-
-Avoid:
-
-- major new features
-- speculative features
-- premature social development
-
-This restriction excludes work required to finish the approved core background
-customization experience above; avoid unrelated feature expansion.
-
-v0.9 ends when the application feels dependable enough for normal daily use.
+Avoid major feature expansion. The beta feature freeze does not cancel the
+background-customization deadline above. Preserve existing user records and
+settings. v0.9 ends when the integrated experience is dependable for daily use.
 
 ---
 
-## Approved Later Sound Requirement — Version Undecided
+## Future Experience Implementation Boundary
 
-After v0.2, add an appropriate timer-completion sound with volume control and
-mute. The exact delivery version and sound asset remain undecided. Custom
-completion sounds may be considered later, but are not committed scope.
-Avoid attention-seeking audio design and unnecessary sound features.
+These are approved directions, not implemented features. v0.1 and v0.2 remain
+completed foundations; this documentation update does not start v0.3 or change
+v0.2 timer behavior/schema. No premature companion components/domain models,
+rendering choice, asset system, media storage fields, IndexedDB implementation,
+dependencies, future settings UI, backend, or social infrastructure.
 
----
-
-## Future Customization Implementation Boundary
-
-The customization stages above are approved product requirements, not completed
-features. Preserve Built for accountability, not attention.
-
-Do not implement them during v0.2: no new dependencies, placeholder components,
-future settings UI, wallpaper/media domain types, storage fields, schema changes,
-IndexedDB or other media-storage implementation, or premature technology choice.
-Do not change the v0.2 timer behavior or schema to prepare for them.
+Introduce Focus, Tasks, Review, History, and Insights service boundaries only as
+the corresponding version requires. Visual implementations stay outside the
+productivity domain. Preserve **Companionship + Accountability** and
+**Built for accountability, not attention** throughout these stages.
 
 ---
 
-# v1.0 — Personal Focus
+# v1.0 — Personal Focus Companion
 
-The first formal release.
+A mature local-first, Web-first personal focus product where:
 
-Focus Companion should now be a complete local personal productivity application.
+- a companion and personal environment form the main experience
+- Tasks help decide what to do
+- Focus helps do one thing at a time
+- History and Review preserve what happened
+- Insights support reflection
+- atmosphere, animation, and sound make the space comfortable to keep open while working
+- productivity functionality remains reliable and lightweight
 
-## v1.0 Core
-
-### Focus
-
-- polished Pomodoro timer
-- reliable session handling
-- flexible duration settings
-- task-linked focus sessions
-
-### Tasks
-
-- lightweight Todo workflow
-- categories
-- completion state
-- task focus-time tracking
-
-### Insights
-
-- daily statistics
-- weekly statistics
-- historical data
-- pie chart
-- bar chart
-- line chart
-
-### Experience
-
-- polished UI
-- dark/light themes
-- strong local persistence
-- import/export
-- reliable everyday usage
-
-### v1.0 Definition
-
-v1.0 does not mean:
-
-> all planned features exist.
-
-It means:
-
-> the single-user personal focus experience is complete, stable, and genuinely useful.
+Visual art, animation, music, sound, and atmosphere are product capabilities,
+not final cosmetic additions. A persistent scene supports companionship and
+accountability without engagement traps. Keeping the product open should serve
+work, not maximize interaction. v1.0 is a dependable personal experience, not
+completion of every possible future feature.
 
 ---
 

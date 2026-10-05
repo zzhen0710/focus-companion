@@ -27,6 +27,12 @@ There is:
 
 The application should remain fully usable without Internet access.
 
+The approved delivery direction is Web-first and local-first. Public Web
+deployment belongs to v0.9 and does not itself require a backend, accounts,
+cloud data, or social services. The current v0.2 app has no offline resource
+cache; deployment, asset-loading, and offline delivery details remain work for
+their relevant stages, not infrastructure choices made by this document update.
+
 ---
 
 # 2. Initial Technology Stack
@@ -63,7 +69,8 @@ Future versions may change the stack when real requirements justify it.
 
 Focus Companion is expected to grow beyond a single static page.
 
-The application will eventually contain multiple interactive areas:
+The current shell exposes separate functional areas. Long-term these functions
+should be lightweight surfaces within a persistent companion scene:
 
 - Focus
 - Tasks
@@ -109,6 +116,37 @@ React components should primarily be responsible for:
 - composing application behavior
 
 This keeps business logic testable and easier to reuse later.
+
+### Approved evolution: application services and experience
+
+Before experience-heavy stages, build a stable productivity core behind local
+TypeScript application/service interfaces. The conceptual direction is:
+
+```text
+Experience / Scene / UI
+    ↓
+Application Services (local TypeScript interfaces)
+    ↓
+Domain
+    ↓
+Persistence
+```
+
+Focus, Tasks, Review, History, and Insights are potential service boundaries,
+introduced only when the corresponding version needs them. These are not HTTP
+or backend APIs, and this diagram does not require a framework, new directory
+tree, or every interface to be created now. The v0.2 controller and pure timer
+functions already provide a useful starting separation; no runtime refactor is
+required by this documentation update.
+
+Experience consumes business state and actions without embedding business
+rules. Domain/application code must not depend on specific avatar animation,
+room art, music, sound playback, or rendering implementation. For example, the
+experience layer may map a focusing state to a studying companion; the domain
+does not know that visual representation. Do not introduce placeholder companion
+domain types into the productivity core or speculative asset infrastructure.
+Rendering technology (2D, Live2D-like, 3D, or another approach), media-storage
+technology, exact service contracts, and experience mappings remain undecided.
 
 ---
 
@@ -182,6 +220,12 @@ completedAt
 ```
 
 Additional fields should only be introduced when required.
+
+For v0.3, the approved scheduling direction is unscheduled, a specific date,
+a specific date with optional time range, or a broader date range. Daily,
+Weekly, and Monthly are not separate Task types; Today/Tomorrow/This Week/This
+Month can be derived views. Exact fields and date/time semantics require the
+v0.3 plan, not a schema change now.
 
 ---
 
@@ -490,9 +534,7 @@ The specific chart library does not need to be chosen before v0.5.
 
 # 12. UI Architecture
 
-The long-term primary navigation is expected to remain small.
-
-Current planned top-level areas:
+The implemented v0.2 shell has hash navigation for:
 
 ```text
 Focus
@@ -501,11 +543,18 @@ Insights
 Profile
 ```
 
-Settings may be accessed separately without becoming a major product area.
+This shell is a valid temporary foundation, not the final visual hierarchy.
+v0.3-v0.5 may use intentionally basic pages to validate behavior and local APIs;
+avoid excessive polish for dashboard layouts expected to change from v0.7.
 
-Avoid unnecessary pages.
-
-The product should feel compact.
+The long-term experience prefers one persistent primary scene with the companion
+visually present for most core interactions. Timer, Tasks, History, Review, and
+Insights should be lightweight functional surfaces, potentially drawers,
+overlays, compact cards, side panels, or contextual controls. Do not require
+frequent navigation between themed rooms or a large independent Task Wall.
+Exact surfaces and layout remain art/interaction decisions for their roadmap
+stages. The first companion release prioritizes one polished default companion
+and one polished default environment. Profile/social features remain later scope.
 
 ---
 

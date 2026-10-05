@@ -39,6 +39,11 @@ In particular, do not prematurely implement:
 
 Future requirements should influence clean boundaries, not current implementation complexity.
 
+Here, friends/companions means social relationships with real people. The future
+local virtual companion is a separate experience capability, planned for v0.7;
+do not implement it in the productivity-core stages. v0.2 is completed; the
+approved roadmap refinement does not itself authorize starting v0.3.
+
 ---
 
 ## Product Principle
@@ -107,6 +112,15 @@ Prefer:
 
 Avoid unnecessary dependencies and premature infrastructure.
 
+The approved future layering is Experience / Scene / UI -> local TypeScript
+Application Services -> Domain -> Persistence. These services are internal
+application APIs, not HTTP/backend APIs. Introduce Focus, Tasks, Review, History,
+and Insights boundaries only when their version needs them; do not create all
+interfaces in advance. Experience consumes business state/actions without
+embedding business rules. Domain/application code must not depend on companion
+animations, room art, music, or rendering. Do not add companion domain models,
+speculative asset systems, or choose a rendering technology prematurely.
+
 ---
 
 ## Visual Direction
@@ -122,9 +136,30 @@ The product should feel:
 
 Visual quality matters.
 
+The long-term visual core is Companion + Environment + Atmosphere, supported by
+reliable lightweight tools. From the companion stage, prefer one persistent
+primary scene with the companion occupying a major share of the composition;
+tools may use drawers, overlays, compact cards, or side panels.
+
+v0.3-v0.5 UI may remain intentionally basic to validate behavior and local
+application APIs. Do not over-polish temporary SaaS-style dashboard pages that
+will be redesigned from v0.7. Preserve task cards without committing to a large
+independent infinite-canvas Task Wall. Task scheduling is flexible data, not
+hard-coded Daily/Weekly/Monthly task types.
+
+Art, animation, music, sound, and atmosphere are future product capabilities,
+not merely decoration. Prioritize one excellent default companion/environment,
+with optional/reducible motion and sound. Category references are permitted;
+copying another product's specific art, characters, rooms, music, animation,
+or UI is not.
+
 However:
 
 > usability first, polish second, decoration last.
+
+This ordering does not demote the approved companion/atmosphere experience to
+cosmetic polish. Build it in its roadmap stage while preserving usability and
+the principle Built for accountability, not attention.
 
 Avoid visual clutter, excessive gradients, unnecessary animation, gimmicks, or dashboard-style information overload.
 

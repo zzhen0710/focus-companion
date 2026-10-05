@@ -2,17 +2,21 @@
 
 ## What It Is
 
-Focus Companion is a lightweight productivity tool built around:
+Focus Companion is a local-first, Web-first personal focus product whose
+long-term core experience is **Companion + Environment + Atmosphere**, supported
+by reliable, lightweight productivity tools.
 
-- focused work
-- task management
-- time awareness
-- progress reflection
-- gentle accountability with others
+The intended feeling is: "I enter a personal focus space where a companion is
+quietly working alongside me." A virtual companion and comfortable environment
+should become the primary visual experience. Timer, Tasks, History, Review, and
+Insights remain important functional layers integrated into that experience.
+The product should not evolve primarily into a traditional productivity
+dashboard with a character added on top.
 
-It begins as a local personal tool and may gradually evolve into a connected product for people who want to focus alongside a small number of companions.
-
-The product should remain simple, calm, and intentional even as it grows.
+The virtual companion is part of the local personal experience; it does not
+require accounts or social infrastructure. Optional relationships with real
+people remain a separate, later direction. The product must remain calm,
+clear, immediately usable, and intentional as it grows.
 
 ---
 
@@ -22,7 +26,12 @@ The product should remain simple, calm, and intentional even as it grows.
 
 Focus Companion should help users return to their work rather than keep them inside the product.
 
-Social features exist to provide:
+Quiet virtual companionship and trustworthy personal records support the
+emerging differentiation: **Companionship + Accountability**. Meaningful task
+planning, daily review, history, completed/interrupted focus semantics, and
+long-term reflection should remain lightweight in presentation.
+
+Later social features exist to provide:
 
 - companionship
 - accountability
@@ -94,7 +103,24 @@ This direction preserves the core principle: Built for accountability, not atten
 
 ## Core Experience
 
-The long-term product revolves around four main areas:
+### Persistent Primary Scene
+
+Prefer one persistent primary scene rather than frequent navigation between
+multiple themed rooms. The companion should remain visually present for most
+of the core experience and eventually occupy a major share of the composition,
+supported by an atmospheric environment. Productivity UI should generally be
+visually subordinate once the companion stage begins.
+
+Tools may appear as drawers, overlays, compact cards, side panels, or contextual
+controls without unnecessarily replacing the scene. These are interaction
+directions, not a frozen layout or a requirement to create every surface.
+
+During v0.3-v0.5, intentionally basic pages are acceptable for validating
+behavior and local application APIs. Do not over-polish temporary SaaS-style
+dashboards expected to be redesigned from v0.7 onward. The current v0.2
+navigation remains a valid foundation, not the final experience hierarchy.
+
+The following tools form lightweight functional layers around that scene.
 
 ### Focus
 
@@ -103,6 +129,25 @@ A comfortable Pomodoro-style focus timer connected to the user's current task.
 ### Tasks
 
 A lightweight task system for deciding what to work on and tracking progress.
+
+Scheduling should support unscheduled tasks, a specific date, a specific date
+with an optional time range, or a broader date range. Do not hard-code Daily,
+Weekly, and Monthly as separate Task types. Today, Tomorrow, This Week, and
+This Month can be derived views of scheduling data.
+
+Preserve card-oriented presentation without committing to a large independent
+infinite-canvas Task Wall. Long-term Tasks should integrate lightly into the
+primary scene through drawers, side panels, contextual cards, or similar tools.
+Exact fields, date/time rules, and interactions belong to the corresponding
+implementation plan, not this direction document.
+
+### History and Daily Review
+
+History preserves focus and task outcomes. Daily Review revisits unresolved
+prior-day tasks, with outcomes such as complete, move/reschedule, or drop where
+appropriate. v0.4 owns this workflow; exact review and history models remain
+to be designed. Review should help the user decide what comes next without
+becoming enterprise project management.
 
 ### Insights
 
@@ -115,9 +160,39 @@ Examples include:
 - category comparison
 - long-term trends
 
-### Profile
+Profile and optional future social surfaces are secondary to the primary
+personal scene; the current Profile placeholder is not a requirement for a
+visually dominant long-term page.
 
-A minimal personal space representing the user's focus identity, goals, progress, and eventually their relationships with focus companions.
+### Companion, Art, and Atmosphere
+
+Visual art, animation, music, sound, and atmosphere are product capabilities,
+not merely final cosmetic polish. The first serious companion release should
+prioritize one high-quality default companion and one high-quality default
+environment over many shallow variants. Animation and sound must be optional
+or reducible and must support focus rather than demand attention.
+
+Existing cozy focus/companion products are category references only. Do not
+copy their specific art, characters, rooms, music, animation, or UI.
+
+Art direction begins in v0.6; the main companion scene belongs to v0.7 and richer
+atmosphere/personalization to v0.8. Do not choose 2D, Live2D-like, 3D, or another
+rendering approach yet. Do not create speculative asset systems or companion
+domain models inside the productivity core.
+
+### Development Boundary
+
+Build the productivity core behind local TypeScript application/service
+interfaces before the experience-heavy stages. These are not HTTP/backend APIs.
+The intended layering is Experience / Scene / UI -> Application Services ->
+Domain -> Persistence. Focus, Tasks, Review, History, and Insights are potential
+boundaries, introduced only when their version needs them.
+
+The experience layer consumes business state and actions without embedding
+business rules. Domain/application code must not depend on specific animations,
+room art, music, or visual implementations. A Focus state may be mapped to a
+studying companion by the experience layer; the domain does not know that visual
+representation. Exact service contracts and rendering details remain undecided.
 
 ---
 
@@ -133,7 +208,8 @@ These are approved future requirements, not implemented v0.2 behavior. v0.2
 records only naturally completed focus periods; resetting an unfinished period
 abandons it without a record. The interrupted-session model, the precise
 interruption rules, and the completion-rate calculation remain to be designed
-in the Focus History / Insights stage. Do not introduce that model in v0.2.
+in v0.4 History & Daily Review Core and v0.5 Insights Core respectively. Do not
+introduce that model in v0.2.
 
 ---
 
@@ -212,7 +288,10 @@ requirement must remain.
 
 ### Local Background Customization
 
-- Keep the current clean background as the default; importing media is optional.
+- Keep the current clean background as the default during the productivity-core
+  stages; media import stays optional. v0.7 establishes one polished default
+  companion environment, and customization must preserve a calm, immediately
+  usable default rather than require users to configure it.
 - Allow users to import their own local image backgrounds.
 - Allow users to import their own local video backgrounds.
 - The experience should feel like creating a personal focus environment,
@@ -239,17 +318,23 @@ appearance, adjustment ranges, and interaction details remain undecided.
 
 ### Restrained Completion Sound
 
-A later version must add an appropriate timer-completion sound, volume control,
-and mute. The exact delivery version and sound asset remain undecided. Custom
+v0.8 must add an appropriate timer-completion sound, volume control,
+and mute, alongside restrained music/ambient sound. The sound asset remains undecided. Custom
 completion sounds may be considered later; they are not a committed requirement.
 Avoid attention-seeking audio design and unnecessary sound features.
 
 ### Staging and Implementation Boundary
 
-- v0.7 establishes the visual customization foundation, background presentation,
-  foreground surface styles, and controlled blur/dim adjustments.
-- v0.8 addresses the reliability, persistence, invalid-media handling, storage
-  limits, and recovery required by user-imported media.
+- v0.6 establishes experience contracts and serious art-direction prototypes.
+- v0.7 establishes the companion and one polished default main scene, with
+  lightweight productivity surfaces integrated around it.
+- v0.8 adds atmosphere and personalization: music/sound, environmental and
+  companion behavior, optional lighting/day-night treatment, image/video
+  backgrounds, and controlled blur/dim/glass and foreground surface styles.
+  It also addresses media/resource reliability, persistence, invalid media,
+  storage limits, and recovery.
+- v0.9 integrates and polishes the experience, validates reliability and data
+  safety, and supports public Web deployment and real-user daily use.
 - No later than v0.9, the core image/video import and background experience must
   be usable by beta users.
 
@@ -298,10 +383,18 @@ The first goal is to make the personal focus experience genuinely useful:
 - useful statistics
 - excellent everyday usability
 
-Networking, accounts, synchronization, companions, profiles, boards, and reactions belong to later stages.
+Networking, accounts, synchronization, relationships with real companions,
+profiles, boards, and reactions belong to later stages. The local virtual
+companion follows the separate v0.6-v0.8 experience roadmap; neither direction
+is implemented in the current v0.2 foundation.
 
 ---
 
 ## Product North Star
 
-A user should be able to open Focus Companion, understand what matters today, begin focused work quickly, see where their time went, receive a small amount of meaningful encouragement from people they care about, and then leave the product and continue living their life.
+A user should enter a personal focus space, feel a companion quietly working
+alongside them, decide what to do, focus on one thing, review what happened,
+and reflect over time. Atmosphere can make the space comfortable to keep open
+while working; reliable tools support accountability without demanding constant
+interaction. Later encouragement from trusted people may support this experience.
+The user should remain free to return attention to their work and life.
