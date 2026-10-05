@@ -1,6 +1,7 @@
-import type { AppData, AppStorage, LegacyAppData, LoadResult } from './storage'
+import type { AppData, AppStorage, LegacyAppData, V2AppData, LoadResult } from './storage'
+import { isTaskSchedule } from '../domain/taskSchedule'
 import { isTimerState } from '../domain/timer'
-import { migrateV1ToV2 } from './migrations'
+import { migrateV1ToV2, migrateV2ToV3 } from './migrations'
 
 export const STORAGE_KEY = 'focus-companion:data'
 
@@ -22,13 +23,14 @@ function isNonnegativeNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }
 
-function isStoredData(value: unknown): value is AppData | LegacyAppData {
-  if (!isObject(value) || (value.schemaVersion !== 1 && value.schemaVersion !== 2)) return false
-  if (value.schemaVersion === 2 && !isTimerState(value.timer)) return false
+function isStoredData(value: unknown): value is AppData | LegacyAppData | V2AppData {
+  if (!isObject(value) || typeof value.schemaVersion !== 'number' || ![1, 2, 3].includes(value.schemaVersion)) return false
+  if (value.schemaVersion !== 1 && !isTimerState(value.timer, value.schemaVersion === 3)) return false
   const { tasks, categories, sessions, settings } = value
   return (
     Array.isArray(tasks) && tasks.every((task: unknown) =>
       isObject(task) && isText(task.id) && isText(task.title) &&
+      (value.schemaVersion !== 3 || ((task.content === null || typeof task.content === 'string') && isTaskSchedule(task.schedule))) &&
       isReference(task.categoryId) && typeof task.completed === 'boolean' &&
       isNonnegativeNumber(task.createdAt) &&
       (task.completedAt === null || isNonnegativeNumber(task.completedAt))) &&
@@ -64,13 +66,13 @@ export function createLocalStorageAdapter(
     } catch {
       return { status: 'invalid' }
     }
-    if (isObject(parsed) && typeof parsed.schemaVersion === 'number' && parsed.schemaVersion !== 1 && parsed.schemaVersion !== 2) {
+    if (isObject(parsed) && typeof parsed.schemaVersion === 'number' && ![1, 2, 3].includes(parsed.schemaVersion)) {
       return { status: 'unsupported' }
     }
     if (!isStoredData(parsed)) return { status: 'invalid' }
-    return parsed.schemaVersion === 1
-      ? { status: 'ready', data: migrateV1ToV2(parsed), needsMigration: true }
-      : { status: 'ready', data: parsed }
+    if (parsed.schemaVersion === 1) return { status: 'ready', data: migrateV2ToV3(migrateV1ToV2(parsed)), needsMigration: true }
+    if (parsed.schemaVersion === 2) return { status: 'ready', data: migrateV2ToV3(parsed), needsMigration: true }
+    return { status: 'ready', data: parsed }
   }
 
   return {
@@ -79,7 +81,7 @@ export function createLocalStorageAdapter(
       // Recheck existing data so a failed load can never trigger a destructive overwrite.
       const existing = load()
       if (existing.status === 'unavailable') return { status: 'unavailable' }
-      if (existing.status === 'invalid' || existing.status === 'unsupported' || data.schemaVersion !== 2 || !isStoredData(data)) {
+      if (existing.status === 'invalid' || existing.status === 'unsupported' || data.schemaVersion !== 3 || !isStoredData(data)) {
         return { status: 'blocked' }
       }
       try {

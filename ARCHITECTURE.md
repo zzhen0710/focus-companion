@@ -29,7 +29,7 @@ The application should remain fully usable without Internet access.
 
 The approved delivery direction is Web-first and local-first. Public Web
 deployment belongs to v0.9 and does not itself require a backend, accounts,
-cloud data, or social services. The current v0.2 app has no offline resource
+cloud data, or social services. The current v0.3 app has no offline resource
 cache; deployment, asset-loading, and offline delivery details remain work for
 their relevant stages, not infrastructure choices made by this document update.
 
@@ -136,8 +136,13 @@ Focus, Tasks, Review, History, and Insights are potential service boundaries,
 introduced only when the corresponding version needs them. These are not HTTP
 or backend APIs, and this diagram does not require a framework, new directory
 tree, or every interface to be created now. The v0.2 controller and pure timer
-functions already provide a useful starting separation; no runtime refactor is
-required by this documentation update.
+functions already provide a useful starting separation. In v0.3,
+`src/app/services.ts` composes one storage adapter, the timer controller, and a
+small Task service. Timer bootstrap/migration runs before Tasks load. Task
+operations (`getSnapshot`, `subscribe`, `reload`, `create`, `update`,
+`setCompleted`, `delete`, `move`) validate the latest persisted document and
+publish success only after saving. Clock and ID generation are injectable for
+tests. No repository framework, event bus, or backend API is introduced.
 
 Experience consumes business state and actions without embedding business
 rules. Domain/application code must not depend on specific avatar animation,
@@ -207,33 +212,44 @@ The early application should revolve around a small number of explicit domain ob
 
 Represents something the user intends to work on.
 
-Possible fields:
+Implemented v0.3 fields:
 
 ```text
 id
 title
-description
+content (nullable plain text)
 categoryId
+schedule
 completed
 createdAt
 completedAt
 ```
 
-Additional fields should only be introduced when required.
+`schedule` is a discriminated union: `{ kind: 'unscheduled' }`,
+`{ kind: 'date', date, timeRange: null | { start, end } }`, or
+`{ kind: 'dateRange', startDate, endDate }`. Only the active variant is stored.
+Real YYYY-MM-DD dates and HH:mm times are validated. Time ranges require both
+endpoints, start < end, and no overnight interval; date ranges are inclusive
+and allow equal endpoints. These are floating local calendar values, never UTC
+planning instants. Pure helpers use UTC calendar components only for deterministic
+date arithmetic, avoiding assumptions about local 24-hour days. Query context
+comes from the user's local date; week starts Monday. Date ranges match by
+inclusive overlap. Later means starting after the current calendar month.
 
-For v0.3, the approved scheduling direction is unscheduled, a specific date,
-a specific date with optional time range, or a broader date range. Daily,
-Weekly, and Monthly are not separate Task types; Today/Tomorrow/This Week/This
-Month can be derived views. Exact fields and date/time semantics require the
-v0.3 plan, not a schema change now.
+Task array order is manual order. Completion stores a boolean and timestamp;
+repeated completion preserves the timestamp, reopening clears it. Completed
+tasks can be edited without reopening. No early/late classification, audit log,
+recurrence, or spatial state is stored. Existing legacy completion combinations
+are preserved on migration rather than fabricated or repaired.
 
 ---
 
 ## FocusSession
 
-Represents a completed or active focus period.
+The implemented record represents a naturally completed Focus period. Active
+period state is held separately in `timer`; interrupted records remain v0.4.
 
-Possible fields:
+Implemented fields:
 
 ```text
 id
@@ -241,8 +257,7 @@ taskId
 categoryId
 startedAt
 endedAt
-duration
-status
+durationSeconds
 ```
 
 FocusSession is the primary historical unit for time statistics.
@@ -337,7 +352,15 @@ FocusSession. Resume starts a new running segment for the remaining time, with
 the same timer ID and captured duration. Existing Completed state is preserved.
 Cold recovery remains conservative across failed reads and save retries; failed
 recovery writes retain the paused state in memory and block Resume until saved.
-This uses the existing schema v2 fields, without new dependencies.
+The v0.2 recovery fields are unchanged in schema v3; no dependency was added.
+
+The v0.3 metadata extension captures nullable task/category IDs when Focus
+starts, after checking the latest Task is open. Running/Paused targets cannot
+be switched. Edits/completion do not change captured IDs or timing. Recovery,
+pause/resume, checkpoints, and natural completion preserve those IDs; the
+FocusSession receives them on completion. Breaks have null targets. Task deletion
+is rejected while a Running/Paused timer references it. Later deletion never
+rewrites sessions; unresolved references are valid and display fallback labels.
 
 Lifecycle events improve checkpoint precision, not cold-recovery correctness.
 The implementation does not rely on beforeunload/unload, a heartbeat timeout,
@@ -451,14 +474,17 @@ Do not implement those future adapters yet.
 
 # 9. Data Schema Versioning
 
-The implemented v0.2 document uses `schemaVersion: 2` at the existing key
-`focus-companion:data`, adding a discriminated `timer` state to the original
-tasks, categories, sessions, and settings. The adapter validates v1 data and
-returns a pure v1-to-v2 migration with an idle Focus timer. The controller then
-saves it explicitly. Existing records and settings are preserved; a failed
-migration write leaves the stored v1 document intact. Invalid data and unknown
-versions continue to block writes. This is a single migration, not a general
-migration framework.
+The implemented v0.3 document uses `schemaVersion: 3` at the existing key
+`focus-companion:data`. The adapter validates supported schemas, returning pure
+v1 → v2 → v3 migrations. v1 → v2 adds an idle Focus timer; v2 → v3 adds Task
+`content: null`, `schedule: { kind: 'unscheduled' }`, and null task/category
+targets to started timers. IDs, order, completion facts, categories, sessions,
+settings, and all timer timing information are preserved without mutating input.
+Migration loading neither writes nor applies timer recovery. The controller
+then applies its conservative recovery and saves explicitly, including migrated
+Completed state. Failed writes preserve the old stored document. Invalid data
+and unknown versions continue to block writes. There is no general migration
+framework or destructive reset fallback.
 
 Persisted application data should include a schema version.
 
@@ -534,7 +560,7 @@ The specific chart library does not need to be chosen before v0.5.
 
 # 12. UI Architecture
 
-The implemented v0.2 shell has hash navigation for:
+The implemented v0.3 shell has hash navigation for:
 
 ```text
 Focus

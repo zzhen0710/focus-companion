@@ -28,7 +28,7 @@ describe('timestamp timer', () => {
 
   it('starts with a stable ID and captures the configured duration', () => {
     expect(start()).toEqual({ status: 'running', mode: 'focus', id: 'period-1', startedAt: 1000,
-      runStartedAt: 1000, accumulatedMs: 0, durationMs: 2000 })
+      runStartedAt: 1000, accumulatedMs: 0, durationMs: 2000, taskId: null, categoryId: null })
     expect(remainingMs(start(), { ...settings, focusDurationSeconds: 50 }, 1500)).toBe(1500)
   })
 

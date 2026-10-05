@@ -19,7 +19,7 @@ function completedData(data: AppData, timer: TimerState): AppData {
   let sessions = data.sessions
   if (timer.mode === 'focus' && !sessions.some((session) => session.id === timer.id)) {
     const session: FocusSession = {
-      id: timer.id, taskId: null, categoryId: null, startedAt: timer.startedAt,
+      id: timer.id, taskId: timer.taskId, categoryId: timer.categoryId, startedAt: timer.startedAt,
       endedAt: timer.endedAt, durationSeconds: timer.durationMs / 1000,
     }
     sessions = [...sessions, session]
@@ -86,6 +86,7 @@ export function createTimerController(
       if (current.status === 'completed') {
         pendingPause = null
         recovering = false
+        if (loaded.needsSave && !save(loaded.data)) return null
         publish(loaded.data)
         return loaded.data
       }
@@ -115,17 +116,23 @@ export function createTimerController(
   }
 
   function dispatch(action: TimerAction) {
-    if (snapshot.error) return
+    if (snapshot.error) return false
     let data = prepare()
-    if (!data) return
+    if (!data) return false
     const now = clock()
     const reconciled = reconcileTimer(data.timer, now)
     if (reconciled !== data.timer) {
       data = completedData(data, reconciled)
-      if (!save(data, true)) return
+      if (!save(data, true)) return false
+    }
+    if (action.type === 'start' && data.timer.mode === 'focus' && action.taskId) {
+      const selectedId = action.taskId
+      const task = data.tasks.find((task) => task.id === selectedId && !task.completed)
+      if (!task) return false
+      action = { ...action, categoryId: task.categoryId }
     }
     const timer = transitionTimer(data.timer, action, data.settings, now)
-    if (timer !== data.timer) save({ ...data, timer })
+    return timer !== data.timer && save({ ...data, timer })
   }
 
   function retry() {
@@ -180,7 +187,7 @@ export function createTimerController(
       recovering = true
       prepare()
     },
-    start: () => dispatch({ type: 'start', id: createId() }),
+    start: (taskId: string | null = null) => dispatch({ type: 'start', id: createId(), taskId }),
     pause: () => dispatch({ type: 'pause' }),
     resume: () => dispatch({ type: 'resume' }),
     reset: () => dispatch({ type: 'reset' }),

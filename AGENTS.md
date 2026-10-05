@@ -20,7 +20,7 @@ These documents are the project's source of truth.
 
 The project is currently in:
 
-**v0.2 — Focus Timer**
+**v0.3 — Tasks Core (completed; manual acceptance passed)**
 
 Do not implement features from later versions unless the user explicitly changes the current scope.
 
@@ -41,8 +41,17 @@ Future requirements should influence clean boundaries, not current implementatio
 
 Here, friends/companions means social relationships with real people. The future
 local virtual companion is a separate experience capability, planned for v0.7;
-do not implement it in the productivity-core stages. v0.2 is completed; the
-approved roadmap refinement does not itself authorize starting v0.3.
+do not implement it in the productivity-core stages. v0.2 is completed;
+v0.3 is completed and accepted. Do not start v0.4 without explicit approval.
+
+Tasks use floating local calendar schedules and persistent array order. Completed
+tasks remain editable; preserve completion facts without an audit log. Category
+references are compatibility data, not authorization for category management.
+The local Task service owns mutations and reads the latest valid document before
+saving. Preserve captured Task/category targets and all v0.2 timer timing,
+checkpoint, conservative recovery, completion, and retry guarantees. Never erase
+FocusSession records when deleting a Task; block deletion of an unfinished
+timer's target. Interrupted history remains v0.4 and Insights remains v0.5.
 
 ---
 
@@ -213,6 +222,7 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
+git diff --check
 ```
 
 Start the development server with `npm run dev` and verify the relevant behavior

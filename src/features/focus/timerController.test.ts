@@ -45,6 +45,18 @@ function shortData() {
 }
 
 describe('timer persistence coordinator', () => {
+  it('saves migration on startup with an already completed legacy timer without creating a new session', () => {
+    const data = shortData()
+    const old = { ...data, schemaVersion: 2,
+      timer: { status: 'completed', mode: 'focus', id: 'old', startedAt: 1000, durationMs: 2000, accumulatedMs: 2000, endedAt: 3000 },
+      sessions: [{ id: 'old', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2 }] }
+    let raw = JSON.stringify(old)
+    const storage = createLocalStorageAdapter(() => ({ getItem: () => raw, setItem: (_key, value) => { raw = value } }))
+    const controller = createTimerController(storage, () => 100000)
+    expect(controller.getSnapshot().error).toBeNull()
+    expect(JSON.parse(raw)).toMatchObject({ schemaVersion: 3, timer: { status: 'completed', id: 'old' } })
+    expect(JSON.parse(raw).sessions).toEqual(old.sessions)
+  })
   it('checkpoints every five seconds while keeping the live deadline unchanged', () => {
     const f = fixture()
     f.controller.start()
@@ -174,7 +186,7 @@ describe('timer persistence coordinator', () => {
     f.controller.leave()
     f.failWrites(false)
     const completed = { ...running, timer: { status: 'completed' as const, mode: 'focus' as const,
-      id: 'period-1', startedAt: 1000, durationMs: 2000, accumulatedMs: 2000, endedAt: 3000 },
+      id: 'period-1', startedAt: 1000, durationMs: 2000, accumulatedMs: 2000, endedAt: 3000, taskId: null, categoryId: null },
       sessions: [{ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2 }] }
     f.replace(completed)
     f.controller.retry()
@@ -390,7 +402,7 @@ describe('timer persistence coordinator', () => {
     const f = fixture(shortData())
     f.controller.start()
     const latest = f.stored()
-    latest.tasks.push({ id: 'task', title: 'Keep', categoryId: null, completed: false, createdAt: 0, completedAt: null })
+    latest.tasks.push({ id: 'task', title: 'Keep', categoryId: null, completed: false, createdAt: 0, completedAt: null, content: null, schedule: { kind: 'unscheduled' } })
     latest.sessions.push({ id: 'old', taskId: null, categoryId: null, startedAt: 0, endedAt: 1000, durationSeconds: 1 })
     f.replace(latest)
     f.at(3000)

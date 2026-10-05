@@ -14,6 +14,28 @@ function fixture(initial: string | null = null) {
 }
 
 describe('local storage boundary', () => {
+  it.each([
+    { kind: 'date', date: '2026-02-29', timeRange: null },
+    { kind: 'unscheduled', date: '2026-10-06' },
+    { kind: 'dateRange', startDate: '2026-10-06' },
+  ])('protects invalid schema v3 task schedules %j', (schedule) => {
+    const data = createDefaultData()
+    const raw = JSON.stringify({ ...data, tasks: [{ id: 'task', title: 'Keep', content: null, schedule,
+      categoryId: null, completed: false, createdAt: 0, completedAt: null }] })
+    const { adapter, values } = fixture(raw)
+    expect(adapter.load().status).toBe('invalid')
+    expect(adapter.save(data).status).toBe('blocked')
+    expect(values.get(STORAGE_KEY)).toBe(raw)
+  })
+  it('rejects string schema versions and break task targets', () => {
+    for (const data of [{ ...createDefaultData(), schemaVersion: '3' },
+      { ...createDefaultData(), timer: { status: 'running', mode: 'shortBreak', id: 'break', startedAt: 1000,
+        durationMs: 2000, accumulatedMs: 0, runStartedAt: 1000, taskId: 'task', categoryId: null } }]) {
+      const { adapter } = fixture(JSON.stringify(data))
+      expect(adapter.load().status).toBe('invalid')
+      expect(adapter.save(createDefaultData()).status).toBe('blocked')
+    }
+  })
   it('round-trips running, paused and completed timer states', () => {
     const { adapter } = fixture()
     const data = createDefaultData()
@@ -49,7 +71,7 @@ describe('local storage boundary', () => {
   it('round-trips every domain record and duration unit', () => {
     const { adapter } = fixture()
     const data = createDefaultData()
-    data.tasks.push({ id: 'task-1', title: 'Read', categoryId: 'category-1', completed: true, createdAt: 1000, completedAt: 3000 })
+    data.tasks.push({ id: 'task-1', title: 'Read', categoryId: 'category-1', completed: true, createdAt: 1000, completedAt: 3000, content: null, schedule: { kind: 'unscheduled' } })
     data.categories.push({ id: 'category-1', name: 'Reading', createdAt: 1000 })
     data.sessions.push({ id: 'session-1', taskId: 'task-1', categoryId: 'category-1', startedAt: 1000, endedAt: 3000, durationSeconds: 2 })
     expect(adapter.save(data).status).toBe('saved')
@@ -72,7 +94,7 @@ describe('local storage boundary', () => {
   })
 
   it('preserves unsupported schema versions', () => {
-    const raw = JSON.stringify({ ...createDefaultData(), schemaVersion: 3 })
+    const raw = JSON.stringify({ ...createDefaultData(), schemaVersion: 4 })
     const { adapter, values } = fixture(raw)
     expect(adapter.load()).toEqual({ status: 'unsupported' })
     expect(adapter.save(createDefaultData())).toEqual({ status: 'blocked' })

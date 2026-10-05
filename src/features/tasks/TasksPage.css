@@ -1,0 +1,10 @@
+.task-editor, .task-card { padding: var(--space-6); border: 1px solid var(--color-border); border-radius: var(--radius-card); margin-block: var(--space-6); }
+.task-editor fieldset { border: 0; padding: 0; display: grid; gap: var(--space-4); }
+.task-editor label, .task-filters label { display: grid; gap: var(--space-2); }
+.task-editor input, .task-editor textarea, .task-editor select, .task-filters select { width: 100%; min-width: 0; padding: .6rem; font: inherit; border: 1px solid var(--color-border); border-radius: .4rem; background: var(--color-surface); color: inherit; }
+.task-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.task-filters, .task-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-block: var(--space-4); }
+.task-list { list-style: none; padding: 0; }
+.task-card h2 { overflow-wrap: anywhere; font-size: 1.1rem; }
+.task-content { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .task-range { grid-template-columns: 1fr; } }

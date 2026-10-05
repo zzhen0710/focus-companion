@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createLocalStorageAdapter } from './localStorageAdapter'
-import { migrateV1ToV2 } from './migrations'
+import { migrateV1ToV2, migrateV2ToV3 } from './migrations'
 import { createDefaultData } from './storage'
-import type { LegacyAppData } from './storage'
+import type { LegacyAppData, V2AppData } from './storage'
 
 function legacy(): LegacyAppData {
   const { timer: _timer, ...data } = createDefaultData()
@@ -34,7 +34,7 @@ describe('v1 to v2 migration', () => {
     if (result.status !== 'ready') throw new Error('Expected migrated data')
     expect(result.needsMigration).toBe(true)
     expect(adapter.save(result.data).status).toBe('saved')
-    expect(JSON.parse(raw)).toEqual(migrateV1ToV2(legacy()))
+    expect(JSON.parse(raw)).toEqual(migrateV2ToV3(migrateV1ToV2(legacy())))
   })
 
   it('leaves the original v1 document intact when migration cannot be saved', () => {
@@ -55,5 +55,38 @@ describe('v1 to v2 migration', () => {
       expect(adapter.save(createDefaultData()).status).toBe('blocked')
       expect(writes).toBe(0)
     }
+  })
+})
+
+describe('v2 to v3 migration', () => {
+  it.each(['idle', 'running', 'paused', 'completed'] as const)('preserves populated data and %s timer without recovery during load', (status) => {
+    const base = migrateV1ToV2(legacy())
+    const common = { mode: 'focus' as const, id: 'timer', startedAt: 1000, durationMs: 2000, accumulatedMs: 500 }
+    const timer: V2AppData['timer'] = status === 'idle' ? { status, mode: 'focus' }
+      : status === 'running' ? { ...common, status, runStartedAt: 1500 }
+        : status === 'paused' ? { ...common, status } : { ...common, status, accumulatedMs: 2000, endedAt: 3000 }
+    const old: V2AppData = { ...base, timer }
+    old.tasks.push({ ...old.tasks[0], id: 'second', completed: true, completedAt: null })
+    old.tasks.push({ ...old.tasks[0], id: 'third', completed: false, completedAt: 2000 })
+    const before = JSON.stringify(old)
+    const migrated = migrateV2ToV3(old)
+    expect(JSON.stringify(old)).toBe(before)
+    expect(migrated).toEqual({ ...old, schemaVersion: 3,
+      tasks: old.tasks.map((task) => ({ ...task, content: null, schedule: { kind: 'unscheduled' } })),
+      timer: status === 'idle' ? timer : { ...timer, taskId: null, categoryId: null } })
+    let raw = before
+    const storage = createLocalStorageAdapter(() => ({ getItem: () => raw, setItem: (_key, value) => { raw = value } }))
+    expect(storage.load()).toEqual({ status: 'ready', data: migrated, needsMigration: true })
+    expect(raw).toBe(before)
+    storage.save(migrated)
+    expect(JSON.parse(raw)).toEqual(migrated)
+  })
+  it('keeps original v2 bytes on a failed migration write', () => {
+    const raw = JSON.stringify(migrateV1ToV2(legacy()))
+    const storage = createLocalStorageAdapter(() => ({ getItem: () => raw, setItem: () => { throw new Error('Quota') } }))
+    const loaded = storage.load()
+    if (loaded.status !== 'ready') throw new Error('Expected migrated data')
+    expect(storage.save(loaded.data).status).toBe('unavailable')
+    expect(JSON.parse(raw).schemaVersion).toBe(2)
   })
 })

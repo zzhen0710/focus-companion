@@ -6,8 +6,9 @@ The project should grow through small, usable versions rather than large feature
 
 Each version should remain stable enough to use before moving to the next one.
 
-v0.1 and v0.2 are completed. v0.3 has not started; the sections after v0.2 are
-approved future scope, not completed features or authorization to implement them.
+v0.1, v0.2, and v0.3 are completed; v0.3 manual acceptance passed. Sections from
+v0.4 onward are approved future scope, not completed features or authorization
+to implement them. v0.3's scope below is retained as its delivery reference.
 
 ---
 

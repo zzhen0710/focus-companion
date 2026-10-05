@@ -8,6 +8,8 @@ interface StartedTimer {
   startedAt: number
   durationMs: number
   accumulatedMs: number
+  taskId: string | null
+  categoryId: string | null
 }
 
 export type TimerState =
@@ -17,7 +19,7 @@ export type TimerState =
   | (StartedTimer & { status: 'completed'; endedAt: number })
 
 export type TimerAction =
-  | { type: 'start'; id: string }
+  | { type: 'start'; id: string; taskId?: string | null; categoryId?: string | null }
   | { type: 'pause' }
   | { type: 'resume' }
   | { type: 'reset' }
@@ -49,6 +51,7 @@ export function reconcileTimer(timer: TimerState, now: number): TimerState {
   return {
     status: 'completed', mode: timer.mode, id: timer.id, startedAt: timer.startedAt,
     durationMs: timer.durationMs, accumulatedMs: timer.durationMs,
+    taskId: timer.taskId, categoryId: timer.categoryId,
     endedAt: timer.runStartedAt + timer.durationMs - timer.accumulatedMs,
   }
 }
@@ -77,12 +80,15 @@ export function transitionTimer(timer: TimerState, action: TimerAction, settings
       const durationMs = durationForMode(timer.mode, settings)
       if (!Number.isFinite(durationMs) || durationMs <= 0) return timer
       return { status: 'running', mode: timer.mode, id: action.id, startedAt: now,
-        durationMs, accumulatedMs: 0, runStartedAt: now }
+        durationMs, accumulatedMs: 0, runStartedAt: now,
+        taskId: timer.mode === 'focus' ? action.taskId ?? null : null,
+        categoryId: timer.mode === 'focus' ? action.categoryId ?? null : null }
     }
     case 'pause':
       if (timer.status !== 'running') return timer
       return { status: 'paused', mode: timer.mode, id: timer.id, startedAt: timer.startedAt,
-        durationMs: timer.durationMs, accumulatedMs: elapsedMs(timer, now) }
+        durationMs: timer.durationMs, accumulatedMs: elapsedMs(timer, now),
+        taskId: timer.taskId, categoryId: timer.categoryId }
     case 'resume':
       if (timer.status !== 'paused') return timer
       return { ...timer, status: 'running', runStartedAt: Math.max(timer.startedAt, now) }
@@ -94,11 +100,15 @@ export function transitionTimer(timer: TimerState, action: TimerAction, settings
   }
 }
 
-export function isTimerState(value: unknown): value is TimerState {
+export function isTimerState(value: unknown, requireTarget = true): value is TimerState {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
   const timer = value as Record<string, unknown>
   if (!['focus', 'shortBreak', 'longBreak'].includes(String(timer.mode))) return false
   if (timer.status === 'idle') return true
+  const reference = (v: unknown) => v === null || (typeof v === 'string' && !!v.trim())
+  if (requireTarget && (!reference(timer.taskId) || !reference(timer.categoryId) ||
+    (timer.mode !== 'focus' && (timer.taskId !== null || timer.categoryId !== null)) ||
+    (timer.taskId === null && timer.categoryId !== null))) return false
   const nonnegative = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0
   if (typeof timer.id !== 'string' || !timer.id.trim() || !nonnegative(timer.startedAt) ||
     !nonnegative(timer.durationMs) || timer.durationMs === 0 || !nonnegative(timer.accumulatedMs)) return false

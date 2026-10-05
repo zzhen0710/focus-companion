@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Settings } from '../../domain/settings'
+import type { Task } from '../../domain/task'
 import { modeLabels, remainingMs } from '../../domain/timer'
 import type { TimerMode } from '../../domain/timer'
 import type { TimerController, TimerSnapshot } from './timerController'
@@ -60,9 +61,11 @@ function DurationSettings({ settings, disabled, controller }: {
   )
 }
 
-export default function FocusPage({ snapshot, controller }: {
-  snapshot: TimerSnapshot; controller: TimerController
+export default function FocusPage({ snapshot, controller, tasks }: {
+  snapshot: TimerSnapshot; controller: TimerController; tasks: Task[]
 }) {
+  const [selectedTask, setSelectedTask] = useState('')
+  const [targetMessage, setTargetMessage] = useState('')
   const [confirmReset, setConfirmReset] = useState(false)
   const primaryButton = useRef<HTMLButtonElement>(null)
   const resetButton = useRef<HTMLButtonElement>(null)
@@ -77,8 +80,12 @@ export default function FocusPage({ snapshot, controller }: {
   const disabled = snapshot.error !== null
   const seconds = Math.ceil(remainingMs(timer, settings, snapshot.now) / 1000)
   const display = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
-  const action = timer.status === 'running' ? controller.pause
-    : timer.status === 'paused' ? controller.resume : controller.start
+  const action = () => {
+    setTargetMessage('')
+    if (timer.status === 'running') controller.pause()
+    else if (timer.status === 'paused') controller.resume()
+    else if (!controller.start(selectedTask || null)) setTargetMessage('Period could not start. Choose an open task or No task, and check storage errors.')
+  }
   const actionLabel = timer.status === 'running' ? 'Pause'
     : timer.status === 'paused' ? 'Resume' : timer.status === 'completed' ? 'Start another period' : 'Start'
   const status = timer.status === 'completed'
@@ -112,6 +119,15 @@ export default function FocusPage({ snapshot, controller }: {
             {modeLabels[mode]}
           </label>)}
         </fieldset>
+        {timer.mode === 'focus' && <div>
+          {active ? <p>Focus target: {timer.taskId ? tasks.find((task) => task.id === timer.taskId)?.title ?? 'Unavailable task' : 'No task'}</p>
+            : <label>Focus task<select value={selectedTask} disabled={disabled} onChange={(event) => setSelectedTask(event.target.value)}>
+              <option value="">No task</option>
+              {selectedTask && !tasks.some((task) => task.id === selectedTask && !task.completed) && <option value={selectedTask}>Unavailable or completed task</option>}
+              {tasks.filter((task) => !task.completed).map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}
+            </select></label>}
+          <p role="status">{targetMessage}</p>
+        </div>}
         <output className="timer-display" role="timer" aria-live="off" aria-label="Remaining time">{display}</output>
         <p className="timer-status" role="status">{status}</p>
         {timer.status === 'paused' && <p className="timer-note" role="status">

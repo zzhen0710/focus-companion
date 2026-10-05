@@ -4,11 +4,13 @@ import TasksPage from '../features/tasks/TasksPage'
 import InsightsPage from '../features/insights/InsightsPage'
 import ProfilePage from '../features/profile/ProfilePage'
 import { useFocusTimer } from '../features/focus/useFocusTimer'
+import { useTasks } from '../features/tasks/useTasks'
+import { retryStorage } from './services'
 import './App.css'
 
 const areas = [
   { path: '#/focus', label: 'Focus', Page: null },
-  { path: '#/tasks', label: 'Tasks', Page: TasksPage },
+  { path: '#/tasks', label: 'Tasks', Page: null },
   { path: '#/insights', label: 'Insights', Page: InsightsPage },
   { path: '#/profile', label: 'Profile', Page: ProfilePage },
 ]
@@ -25,6 +27,7 @@ function subscribeToNavigation(onChange: () => void) {
 export default function App() {
   const area = useSyncExternalStore(subscribeToNavigation, currentArea)
   const { snapshot, controller } = useFocusTimer()
+  const { snapshot: tasks, service } = useTasks()
 
   useEffect(() => {
     if (window.location.hash !== area.path) {
@@ -46,7 +49,7 @@ export default function App() {
           <p className="brand">Focus Companion</p>
           <p className="brand-note">Built for accountability, not attention.</p>
         </div>
-        <span className="version-label">v0.2 · Focus Timer</span>
+        <span className="version-label">v0.3 · Tasks Core</span>
       </header>
       <nav className="primary-nav" aria-label="Main navigation">
         {areas.map(({ path, label }) => (
@@ -56,11 +59,12 @@ export default function App() {
         ))}
       </nav>
       <main id="main-content" tabIndex={-1}>
-        {snapshot.error && <div className="storage-message">
-          <p role="status">{snapshot.error}</p>
-          <button type="button" onClick={controller.retry}>Retry saving / loading</button>
+        {(snapshot.error || tasks.error) && <div className="storage-message">
+          <p role="status">{snapshot.error ?? tasks.error}</p>
+          <button type="button" onClick={retryStorage}>Retry saving / loading</button>
         </div>}
-        {Page ? <Page /> : <FocusPage snapshot={snapshot} controller={controller} />}
+        {area.path === '#/tasks' ? <TasksPage snapshot={tasks} service={service} now={snapshot.now} />
+          : Page ? <Page /> : <FocusPage snapshot={snapshot} controller={controller} tasks={tasks.data?.tasks ?? []} />}
       </main>
       <footer className="app-footer">A quiet space for your work.</footer>
     </div>
