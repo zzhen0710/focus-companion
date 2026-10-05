@@ -27,6 +27,50 @@ function fixture() {
 }
 
 describe('Tasks local application service', () => {
+  it('enforces strict lifecycle, idempotency and immutable history while allowing closed-task editing', () => {
+    const f = fixture(); f.tasks.create(input)
+    f.tasks.setCompleted('task-1', true)
+    const completedEvents = f.stored().taskEvents
+    expect(f.tasks.drop('task-1').ok).toBe(false)
+    f.tasks.setCompleted('task-1', true)
+    expect(f.stored().taskEvents).toEqual(completedEvents)
+    f.tasks.update('task-1', { ...input, title: 'Corrected', content: 'notes' })
+    expect(f.stored().tasks[0].status).toBe('completed')
+    expect(f.stored().taskEvents).toEqual(completedEvents)
+    f.tasks.setCompleted('task-1', false); f.tasks.drop('task-1')
+    expect(f.tasks.setCompleted('task-1', true).ok).toBe(false)
+    f.tasks.drop('task-1')
+    f.tasks.update('task-1', { ...input, title: 'Dropped correction' })
+    expect(f.stored().tasks[0].status).toBe('dropped')
+    f.tasks.setCompleted('task-1', false); f.tasks.setCompleted('task-1', false)
+    expect(f.stored().taskEvents.map((event) => event.type)).toEqual(['taskCompleted', 'taskReopened', 'taskDropped', 'taskReopened'])
+    expect(f.stored().taskEvents[0].taskSnapshot.title).toBe('Read')
+    const events = f.stored().taskEvents
+    f.tasks.delete('task-1')
+    expect(f.stored().taskEvents).toEqual(events)
+  })
+  it('records genuine reschedules only, retaining old/new snapshots after later edits', () => {
+    const f = fixture(); f.tasks.create(input)
+    const changed: TaskInput = { ...input, schedule: { kind: 'date', date: '2026-10-06', timeRange: null } }
+    f.tasks.update('task-1', changed); f.tasks.update('task-1', changed)
+    f.tasks.move('task-1', 'up'); f.tasks.update('task-1', { ...changed, title: 'New title', categoryId: 'category' })
+    expect(f.stored().taskEvents).toHaveLength(1)
+    expect(f.stored().taskEvents[0]).toMatchObject({ type: 'taskRescheduled', previousSchedule: input.schedule,
+      taskSnapshot: { title: 'Read', schedule: changed.schedule }, reviewId: null })
+    f.tasks.drop('task-1')
+    expect(f.timer.start('task-1')).toBe(false)
+  })
+  it.each(['completed', 'interrupted'])('keeps the Start-time title and references for %s Focus after task corrections', (outcome) => {
+    const f = fixture(); f.tasks.create({ ...input, categoryId: 'category' }); f.timer.start('task-1')
+    f.tasks.update('task-1', { ...input, title: 'Renamed', categoryId: null })
+    f.tasks.drop('task-1')
+    f.at(outcome === 'completed' ? 3000 : 2500)
+    if (outcome === 'completed') f.timer.tick(); else f.timer.reset()
+    expect(f.stored().sessions[0]).toMatchObject({ outcome, taskTitleSnapshot: 'Read', taskId: 'task-1', categoryId: 'category' })
+    const sessions = f.stored().sessions
+    f.tasks.delete('task-1')
+    expect(f.stored().sessions).toEqual(sessions)
+  })
   it.each(['running', 'paused'] as const)('returns actionable deletion feedback for a %s target without changing data', (status) => {
     const f = fixture()
     f.tasks.create(input)
@@ -55,7 +99,7 @@ describe('Tasks local application service', () => {
     f.tasks.setCompleted('task-1', true)
     const edit: TaskInput = { ...input, title: 'Corrected', content: 'notes', schedule: { kind: 'date', date: '2026-10-06', timeRange: null } }
     expect(f.tasks.update('task-1', edit).ok).toBe(true)
-    expect(f.stored().tasks[0]).toMatchObject({ id: 'task-1', createdAt: 1000, completed: true, completedAt: 2000, ...edit })
+    expect(f.stored().tasks[0]).toMatchObject({ id: 'task-1', createdAt: 1000, status: 'completed', droppedAt: null, completedAt: 2000, ...edit })
     f.tasks.setCompleted('task-1', false)
     expect(f.stored().tasks[0].completedAt).toBeNull()
     expect(createTaskService(f.storage).getSnapshot().data?.tasks).toEqual(f.stored().tasks)
@@ -124,7 +168,7 @@ describe('Tasks local application service', () => {
     expect(f.tasks.delete('task-1').ok).toBe(true)
     expect(f.stored().sessions).toEqual(sessions)
   })
-  it('rejects stale task selection, clears break targets, and resets without a record', () => {
+  it('rejects stale task selection, clears break targets, and resets a subsecond Focus without a record', () => {
     const f = fixture()
     f.tasks.create(input); f.tasks.setCompleted('task-1', true)
     expect(f.timer.start('task-1')).toBe(false)

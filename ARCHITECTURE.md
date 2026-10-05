@@ -29,7 +29,7 @@ The application should remain fully usable without Internet access.
 
 The approved delivery direction is Web-first and local-first. Public Web
 deployment belongs to v0.9 and does not itself require a backend, accounts,
-cloud data, or social services. The current v0.3 app has no offline resource
+cloud data, or social services. The current v0.4 app has no offline resource
 cache; deployment, asset-loading, and offline delivery details remain work for
 their relevant stages, not infrastructure choices made by this document update.
 
@@ -144,6 +144,11 @@ operations (`getSnapshot`, `subscribe`, `reload`, `create`, `update`,
 publish success only after saving. Clock and ID generation are injectable for
 tests. No repository framework, event bus, or backend API is introduced.
 
+v0.4 adds small Review and read-only History services. Successful shared storage
+writes refresh their snapshots. Task and Review actions reuse pure Task mutation
+logic; each writes the latest complete document once, preserving unrelated data.
+Review decisions save the Task, TaskEvent, and draft/final Review together.
+
 Experience consumes business state and actions without embedding business
 rules. Domain/application code must not depend on specific avatar animation,
 room art, music, sound playback, or rendering implementation. For example, the
@@ -212,7 +217,7 @@ The early application should revolve around a small number of explicit domain ob
 
 Represents something the user intends to work on.
 
-Implemented v0.3 fields:
+Implemented v0.4 fields:
 
 ```text
 id
@@ -220,9 +225,10 @@ title
 content (nullable plain text)
 categoryId
 schedule
-completed
+status (open | completed | dropped)
 createdAt
 completedAt
+droppedAt
 ```
 
 `schedule` is a discriminated union: `{ kind: 'unscheduled' }`,
@@ -236,18 +242,22 @@ date arithmetic, avoiding assumptions about local 24-hour days. Query context
 comes from the user's local date; week starts Monday. Date ranges match by
 inclusive overlap. Later means starting after the current calendar month.
 
-Task array order is manual order. Completion stores a boolean and timestamp;
-repeated completion preserves the timestamp, reopening clears it. Completed
-tasks can be edited without reopening. No early/late classification, audit log,
-recurrence, or spatial state is stored. Existing legacy completion combinations
-are preserved on migration rather than fabricated or repaired.
+Task array order is manual order. Open tasks may be completed or dropped;
+terminal tasks must reopen before entering the other terminal state. Repeating
+the same transition is idempotent. Reopen clears both terminal timestamps.
+Completed and dropped tasks remain editable. TaskEvents record only completion,
+drop, reopen, and actual schedule changes, with small title/schedule snapshots;
+ordinary corrections and ordering do not create events. Deleting a Task leaves
+all historical records intact. Legacy completion timestamps are preserved during
+migration, including unusual combinations, rather than repaired or fabricated.
 
 ---
 
 ## FocusSession
 
-The implemented record represents a naturally completed Focus period. Active
-period state is held separately in `timer`; interrupted records remain v0.4.
+The implemented record represents a naturally completed Focus period or an
+explicit Reset of unfinished Focus with at least one full trustworthy second.
+Active period state is held separately in `timer`.
 
 Implemented fields:
 
@@ -258,11 +268,32 @@ categoryId
 startedAt
 endedAt
 durationSeconds
+plannedDurationSeconds
+outcome (completed | interrupted)
+taskTitleSnapshot (nullable)
 ```
 
 FocusSession is the primary historical unit for time statistics.
 
 Statistics should generally be derived from session records rather than stored as duplicated totals.
+
+## Daily Review and History
+
+Review eligibility is an open Task with a date before today, or a date range
+ending before today, using local calendar values. Same-day time ranges do not
+become overdue within the day. A persisted activeReview stores a stable ID,
+start time, local date, and bounded Task ID cohort. Decisions complete now,
+move to a changed valid non-overdue schedule (including deliberate Unscheduled),
+or drop. Linked TaskEvents provide derived counts; completed Reviews store no
+duplicated totals. Outside resolutions skip candidates without inventing events.
+An empty draft finishes only if it has actual Review actions; otherwise it is
+discarded. Dismissal is transient and does not resolve work. Safe document entry
+prompts once; navigation, ticks, backgrounding, and date changes do not reprompt.
+
+History is a read-only projection of FocusSessions, TaskEvents, and completed
+Reviews, ordered chronologically with deterministic ties and grouped by local
+date. It does not reconcile timers or write storage. Date filters and analytics
+remain v0.5 scope; this is not a general audit-log framework.
 
 ---
 
@@ -352,13 +383,15 @@ FocusSession. Resume starts a new running segment for the remaining time, with
 the same timer ID and captured duration. Existing Completed state is preserved.
 Cold recovery remains conservative across failed reads and save retries; failed
 recovery writes retain the paused state in memory and block Resume until saved.
-The v0.2 recovery fields are unchanged in schema v3; no dependency was added.
+The v0.2 recovery fields remain unchanged in schema v4; no dependency was added.
 
 The v0.3 metadata extension captures nullable task/category IDs when Focus
 starts, after checking the latest Task is open. Running/Paused targets cannot
 be switched. Edits/completion do not change captured IDs or timing. Recovery,
 pause/resume, checkpoints, and natural completion preserve those IDs; the
-FocusSession receives them on completion. Breaks have null targets. Task deletion
+FocusSession receives them on completion. v0.4 also captures the Task title at
+Start; edits never rewrite that snapshot, and legacy titles remain unknown.
+Breaks have null targets. Task deletion
 is rejected while a Running/Paused timer references it. Later deletion never
 rewrites sessions; unresolved references are valid and display fallback labels.
 
@@ -379,11 +412,16 @@ paused rather than infer the unsaved completion. Writes read the latest valid
 document to preserve unrelated records; paused-recovery retry does not downgrade
 an already saved completion or overwrite a different timer identity.
 
-Only naturally completed focus periods create FocusSession records. Completion
-and the record are saved together, using the timer ID to avoid duplicate records
-on repeated reconciliation. Break completion creates no record. Reset abandons
-an unfinished period and never removes existing history. No early-completion or
-interrupted-session model exists in v0.2.
+Natural Focus completion saves Completed state and its record together, using
+the timer ID to avoid duplicates. In v0.4, explicit unfinished Focus Reset saves
+Idle and an interrupted record together when trustworthy elapsed time floors
+to at least one second. Zero/subsecond Focus and breaks create no Reset record.
+Natural completion takes precedence if the deadline has already passed. A failed
+Reset freezes the intended elapsed time and result in the surviving controller,
+blocks actions, and retries against the latest document without duplicate history.
+Loss of that page does not invent an unsaved interruption. Pause, lifecycle
+events, refresh, and conservative recovery never create interrupted records.
+Existing history is never removed by Reset. There is no Finish early action.
 
 Final real Windows acceptance testing reflected elapsed wall-clock sleep time
 after wake. Expired periods could recover as Completed; unexpired periods were
@@ -474,11 +512,16 @@ Do not implement those future adapters yet.
 
 # 9. Data Schema Versioning
 
-The implemented v0.3 document uses `schemaVersion: 3` at the existing key
+The implemented v0.4 document uses `schemaVersion: 4` at the existing key
 `focus-companion:data`. The adapter validates supported schemas, returning pure
-v1 → v2 → v3 migrations. v1 → v2 adds an idle Focus timer; v2 → v3 adds Task
+v1 → v2 → v3 → v4 migrations. v1 → v2 adds an idle Focus timer; v2 → v3 adds Task
 `content: null`, `schedule: { kind: 'unscheduled' }`, and null task/category
-targets to started timers. IDs, order, completion facts, categories, sessions,
+targets to started timers. v3 → v4 maps Task completion booleans to status,
+adds nullable droppedAt, and adds empty TaskEvent/Review collections and a null
+activeReview. Legacy sessions become completed with planned duration equal to
+their stored actual duration and unknown title snapshots; started timers also
+receive null title snapshots. No events, Reviews, or interruptions are backfilled.
+IDs, order, completion facts, categories, sessions,
 settings, and all timer timing information are preserved without mutating input.
 Migration loading neither writes nor applies timer recovery. The controller
 then applies its conservative recovery and saves explicitly, including migrated
@@ -560,11 +603,21 @@ The specific chart library does not need to be chosen before v0.5.
 
 # 12. UI Architecture
 
-The implemented v0.3 shell has hash navigation for:
+Task workspace View/Status selections are presentation preferences stored under
+`focus-companion:ui:task-view`, independently of schema v4 application data.
+Supported values are validated; missing/invalid/unavailable preferences fall back
+to All dates / Open. Save failures retain the selection in the current document
+without blocking durable data. Editors, confirmations, focus, and scroll are not
+stored. Future All Active / finite Priority levels / Closed grouping, coarse
+priority plus fine manual order, icon controls, drag reordering, and scene Task
+surfaces remain design topics; no fields or infrastructure are introduced for them.
+
+The implemented v0.4 shell has hash navigation for:
 
 ```text
 Focus
 Tasks
+History
 Insights
 Profile
 ```
@@ -585,6 +638,15 @@ and one polished default environment. Profile/social features remain later scope
 ---
 
 # 13. Design System
+
+The v0.4 same-title Task creation hint and local confirmation are provisional UI,
+not a notification system. Detection compares only trimmed, case-sensitive
+titles of current open Tasks; duplicates remain allowed and no preference or
+duplicate metadata is persisted. Later Art Direction / Companion work will
+design a unified Quiet Feedback Language for ambient cues, contextual hints,
+decision prompts, blocking errors, and companion/scene-integrated feedback.
+Feedback should be noticeable without intrusion, concise, and visually weighted
+by importance. No infrastructure for that future language is introduced here.
 
 Visual polish is an important product requirement.
 

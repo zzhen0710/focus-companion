@@ -45,16 +45,68 @@ function shortData() {
 }
 
 describe('timer persistence coordinator', () => {
+  it.each(['running', 'paused'])('records whole trusted seconds on explicit %s Reset, once', (state) => {
+    const f = fixture(shortData())
+    f.controller.start(); f.at(2500)
+    if (state === 'paused') { f.controller.pause(); f.at(100000) }
+    f.controller.reset()
+    expect(f.stored().timer.status).toBe('idle')
+    expect(f.stored().sessions).toHaveLength(1)
+    expect(f.stored().sessions[0]).toMatchObject({ outcome: 'interrupted', durationSeconds: 1, plannedDurationSeconds: 2 })
+    f.controller.reset(); f.controller.retry()
+    expect(f.stored().sessions).toHaveLength(1)
+  })
+  it.each([0, 999, 1000, 1999])('applies the one-full-second cutoff at %s ms', (elapsed) => {
+    const f = fixture(shortData())
+    f.controller.start(); f.at(1000 + elapsed); f.controller.reset()
+    expect(f.stored().sessions).toHaveLength(elapsed < 1000 ? 0 : 1)
+    if (elapsed >= 1000) expect(f.stored().sessions[0].durationSeconds).toBe(1)
+  })
+  it('freezes a failed interruption intent and merges latest unrelated data on retry', () => {
+    const f = fixture(shortData())
+    f.controller.start(); f.at(2500); f.failWrites(true); f.controller.reset()
+    expect(f.stored().timer.status).toBe('running')
+    expect(f.stored().sessions).toEqual([])
+    expect(f.controller.getSnapshot()).toMatchObject({ pendingReset: true, data: { timer: { status: 'paused', accumulatedMs: 1500 } } })
+    f.at(100000); f.controller.tick(); f.controller.restore(); f.controller.start()
+    expect(f.controller.getSnapshot().data?.timer.status).toBe('paused')
+    const data = f.stored(); data.settings.focusDurationSeconds = 60; f.replace(data)
+    f.failWrites(false); f.controller.retry(); f.controller.retry()
+    expect(f.stored().timer.status).toBe('idle')
+    expect(f.stored().settings.focusDurationSeconds).toBe(60)
+    expect(f.stored().sessions).toHaveLength(1)
+    expect(f.stored().sessions[0]).toMatchObject({ endedAt: 2500, durationSeconds: 1, outcome: 'interrupted' })
+  })
+  it('does not invent a lost interrupted intent on cold recovery', () => {
+    const f = fixture(shortData())
+    f.controller.start(); f.at(2500); f.failWrites(true); f.controller.reset()
+    f.at(100000); f.failWrites(false)
+    const cold = f.create()
+    expect(cold.getSnapshot().data?.timer).toMatchObject({ status: 'paused', accumulatedMs: 0 })
+    cold.reset()
+    expect(f.stored().sessions).toEqual([])
+  })
+  it('recovered Reset records only saved trustworthy progress, never the absent gap', () => {
+    const f = fixture(shortData())
+    f.controller.start(); f.at(2500); f.controller.checkpoint(); f.at(100000)
+    f.create().reset()
+    expect(f.stored().sessions[0]).toMatchObject({ durationSeconds: 1, outcome: 'interrupted' })
+  })
+  it.each(['shortBreak', 'longBreak'] as const)('does not record %s Reset', (mode) => {
+    const f = fixture(shortData())
+    f.controller.selectMode(mode); f.controller.start(); f.at(2500); f.controller.reset()
+    expect(f.stored().sessions).toEqual([])
+  })
   it('saves migration on startup with an already completed legacy timer without creating a new session', () => {
     const data = shortData()
     const old = { ...data, schemaVersion: 2,
       timer: { status: 'completed', mode: 'focus', id: 'old', startedAt: 1000, durationMs: 2000, accumulatedMs: 2000, endedAt: 3000 },
-      sessions: [{ id: 'old', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2 }] }
+      sessions: [{ id: 'old', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2, plannedDurationSeconds: 2, outcome: 'completed' as const, taskTitleSnapshot: null }] }
     let raw = JSON.stringify(old)
     const storage = createLocalStorageAdapter(() => ({ getItem: () => raw, setItem: (_key, value) => { raw = value } }))
     const controller = createTimerController(storage, () => 100000)
     expect(controller.getSnapshot().error).toBeNull()
-    expect(JSON.parse(raw)).toMatchObject({ schemaVersion: 3, timer: { status: 'completed', id: 'old' } })
+    expect(JSON.parse(raw)).toMatchObject({ schemaVersion: 4, timer: { status: 'completed', id: 'old' } })
     expect(JSON.parse(raw).sessions).toEqual(old.sessions)
   })
   it('checkpoints every five seconds while keeping the live deadline unchanged', () => {
@@ -186,8 +238,8 @@ describe('timer persistence coordinator', () => {
     f.controller.leave()
     f.failWrites(false)
     const completed = { ...running, timer: { status: 'completed' as const, mode: 'focus' as const,
-      id: 'period-1', startedAt: 1000, durationMs: 2000, accumulatedMs: 2000, endedAt: 3000, taskId: null, categoryId: null },
-      sessions: [{ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2 }] }
+      id: 'period-1', startedAt: 1000, durationMs: 2000, accumulatedMs: 2000, endedAt: 3000, taskId: null, categoryId: null, taskTitleSnapshot: null },
+      sessions: [{ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2, plannedDurationSeconds: 2, outcome: 'completed' as const, taskTitleSnapshot: null }] }
     f.replace(completed)
     f.controller.retry()
     expect(f.stored()).toEqual(completed)
@@ -272,7 +324,7 @@ describe('timer persistence coordinator', () => {
     f.at(3000)
     f.controller.tick()
     expect(f.stored().timer.status).toBe('completed')
-    expect(f.stored().sessions).toEqual([{ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2 }])
+    expect(f.stored().sessions).toEqual([{ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2, plannedDurationSeconds: 2, outcome: 'completed' as const, taskTitleSnapshot: null }])
     f.controller.tick()
     f.create().tick()
     expect(f.stored().sessions).toHaveLength(1)
@@ -292,7 +344,7 @@ describe('timer persistence coordinator', () => {
     restored.resume()
     f.at(101000)
     restored.tick()
-    expect(f.stored().sessions).toEqual([{ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 101000, durationSeconds: 2 }])
+    expect(f.stored().sessions).toEqual([{ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 101000, durationSeconds: 2, plannedDurationSeconds: 2, outcome: 'completed' as const, taskTitleSnapshot: null }])
   })
 
   it('keeps a paused period frozen after refresh and sleep', () => {
@@ -316,10 +368,10 @@ describe('timer persistence coordinator', () => {
     f.controller.resume()
     f.at(50000)
     f.controller.tick()
-    expect(f.stored().sessions[0]).toMatchObject({ startedAt: 1000, endedAt: 11500, durationSeconds: 2 })
+    expect(f.stored().sessions[0]).toMatchObject({ startedAt: 1000, endedAt: 11500, durationSeconds: 2, plannedDurationSeconds: 2, outcome: 'completed' as const, taskTitleSnapshot: null })
   })
 
-  it.each(['running', 'paused'])('abandons an unfinished %s period on reset without a record', (state) => {
+  it.each(['running', 'paused'])('abandons a subsecond unfinished %s period on reset without a record', (state) => {
     const f = fixture(shortData())
     f.controller.start()
     f.at(1500)
@@ -402,8 +454,8 @@ describe('timer persistence coordinator', () => {
     const f = fixture(shortData())
     f.controller.start()
     const latest = f.stored()
-    latest.tasks.push({ id: 'task', title: 'Keep', categoryId: null, completed: false, createdAt: 0, completedAt: null, content: null, schedule: { kind: 'unscheduled' } })
-    latest.sessions.push({ id: 'old', taskId: null, categoryId: null, startedAt: 0, endedAt: 1000, durationSeconds: 1 })
+    latest.tasks.push({ id: 'task', title: 'Keep', categoryId: null, status: 'open', droppedAt: null, createdAt: 0, completedAt: null, content: null, schedule: { kind: 'unscheduled' } })
+    latest.sessions.push({ id: 'old', taskId: null, categoryId: null, startedAt: 0, endedAt: 1000, durationSeconds: 1, plannedDurationSeconds: 1, outcome: 'completed' as const, taskTitleSnapshot: null })
     f.replace(latest)
     f.at(3000)
     f.controller.tick()
@@ -417,7 +469,7 @@ describe('timer persistence coordinator', () => {
     const f = fixture(shortData())
     f.controller.start()
     const latest = f.stored()
-    latest.sessions.push({ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2 })
+    latest.sessions.push({ id: 'period-1', taskId: null, categoryId: null, startedAt: 1000, endedAt: 3000, durationSeconds: 2, plannedDurationSeconds: 2, outcome: 'completed' as const, taskTitleSnapshot: null })
     f.replace(latest)
     f.at(3000)
     f.controller.tick()

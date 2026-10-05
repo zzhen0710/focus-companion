@@ -20,7 +20,7 @@ These documents are the project's source of truth.
 
 The project is currently in:
 
-**v0.3 — Tasks Core (completed; manual acceptance passed)**
+**v0.4 — History & Daily Review Core (completed and manually accepted)**
 
 Do not implement features from later versions unless the user explicitly changes the current scope.
 
@@ -42,16 +42,32 @@ Future requirements should influence clean boundaries, not current implementatio
 Here, friends/companions means social relationships with real people. The future
 local virtual companion is a separate experience capability, planned for v0.7;
 do not implement it in the productivity-core stages. v0.2 is completed;
-v0.3 is completed and accepted. Do not start v0.4 without explicit approval.
+v0.3 and v0.4 are completed and accepted. Do not start
+v0.5 without explicit approval.
 
 Tasks use floating local calendar schedules and persistent array order. Completed
-tasks remain editable; preserve completion facts without an audit log. Category
+tasks remain editable; preserve lifecycle facts through the limited TaskEvents,
+without introducing a general audit framework. Category
 references are compatibility data, not authorization for category management.
 The local Task service owns mutations and reads the latest valid document before
 saving. Preserve captured Task/category targets and all v0.2 timer timing,
 checkpoint, conservative recovery, completion, and retry guarantees. Never erase
 FocusSession records when deleting a Task; block deletion of an unfinished
-timer's target. Interrupted history remains v0.4 and Insights remains v0.5.
+timer's target. Explicit unfinished Focus Reset records interrupted time only
+at one full trustworthy second or more, flooring actual seconds. Lifecycle events
+never create interruptions. Failed Reset intents remain frozen and retryable.
+Tasks have strict open/completed/dropped transitions; Reopen before changing
+between terminal outcomes. TaskEvents and Focus title snapshots are immutable.
+Review is a dismissible soft gate with a persisted cohort; count only real linked
+actions and cancel empty untouched drafts. Schema v4 migrates legacy facts without
+fabricating events or titles. Insights/totals/filtering remain v0.5.
+
+Product UI copy is English. Same-title creation warnings compare only trimmed,
+case-sensitive titles of open Tasks, and permit Create Anyway; Back preserves
+the draft. Feedback is provisional until the later Quiet Feedback Language work.
+Task View/Status default to All dates / Open and persist separately under
+`focus-companion:ui:task-view`; never put these preferences into Task records or
+let malformed/unavailable UI preferences block durable schema v4 data.
 
 ---
 

@@ -1,4 +1,5 @@
 import type { FocusSession } from '../../domain/focusSession'
+import { focusRecord } from '../../domain/focusSession'
 import type { Settings } from '../../domain/settings'
 import { areEditableDurations, checkpointTimer, recoverTimer, reconcileTimer, transitionTimer } from '../../domain/timer'
 import type { TimerAction, TimerMode, TimerState } from '../../domain/timer'
@@ -10,6 +11,7 @@ export interface TimerSnapshot {
   now: number
   error: string | null
   pendingCompletion: boolean
+  pendingReset: boolean
 }
 
 export const CHECKPOINT_INTERVAL_MS = 5000
@@ -18,11 +20,8 @@ function completedData(data: AppData, timer: TimerState): AppData {
   if (timer.status !== 'completed') return data
   let sessions = data.sessions
   if (timer.mode === 'focus' && !sessions.some((session) => session.id === timer.id)) {
-    const session: FocusSession = {
-      id: timer.id, taskId: timer.taskId, categoryId: timer.categoryId, startedAt: timer.startedAt,
-      endedAt: timer.endedAt, durationSeconds: timer.durationMs / 1000,
-    }
-    sessions = [...sessions, session]
+    const session = focusRecord(timer, timer.endedAt)
+    if (session) sessions = [...sessions, session]
   }
   return { ...data, timer, sessions }
 }
@@ -33,15 +32,16 @@ export function createTimerController(
   clock: () => number = Date.now,
   createId: () => string = () => crypto.randomUUID(),
 ) {
-  let snapshot: TimerSnapshot = { data: null, now: clock(), error: null, pendingCompletion: false }
+  let snapshot: TimerSnapshot = { data: null, now: clock(), error: null, pendingCompletion: false, pendingReset: false }
   let pendingData: AppData | null = null
+  let pendingReset: { sourceId: string; timer: TimerState; frozen: TimerState; session: FocusSession | null } | null = null
   let recovering = true
   let pendingPause: TimerState | null = null
   let lastCheckpointAt = clock()
   const listeners = new Set<() => void>()
 
   function publish(data: AppData | null, error: string | null = null) {
-    snapshot = { data, now: clock(), error, pendingCompletion: pendingData !== null }
+    snapshot = { data, now: clock(), error, pendingCompletion: pendingData !== null, pendingReset: pendingReset !== null }
     listeners.forEach((listener) => listener())
   }
 
@@ -68,6 +68,7 @@ export function createTimerController(
       return false
     }
     pendingData = null
+    pendingReset = null
     lastCheckpointAt = clock()
     publish(data)
     return true
@@ -127,15 +128,44 @@ export function createTimerController(
     }
     if (action.type === 'start' && data.timer.mode === 'focus' && action.taskId) {
       const selectedId = action.taskId
-      const task = data.tasks.find((task) => task.id === selectedId && !task.completed)
+      const task = data.tasks.find((task) => task.id === selectedId && task.status === 'open')
       if (!task) return false
-      action = { ...action, categoryId: task.categoryId }
+      action = { ...action, categoryId: task.categoryId, taskTitleSnapshot: task.title }
     }
     const timer = transitionTimer(data.timer, action, data.settings, now)
+    if (action.type === 'reset' && data.timer.mode === 'focus' &&
+      (data.timer.status === 'running' || data.timer.status === 'paused')) {
+      const session = focusRecord(data.timer, now)
+      const frozen = data.timer.status === 'running' ? transitionTimer(data.timer, { type: 'pause' }, data.settings, now) : data.timer
+      pendingReset = { sourceId: data.timer.id, timer, frozen, session }
+      const next = { ...data, timer, sessions: session && !data.sessions.some((item) => item.id === session.id)
+        ? [...data.sessions, session] : data.sessions }
+      if (save(next)) return true
+      publish({ ...data, timer: frozen }, 'Reset could not be saved. Focus time is frozen; retry to save this interruption and reset.')
+      return false
+    }
     return timer !== data.timer && save({ ...data, timer })
   }
 
   function retry() {
+    if (pendingReset) {
+      const loaded = read()
+      if (!loaded) return
+      const intent = pendingReset
+      const current = loaded.data.timer
+      if (loaded.data.sessions.some((session) => session.id === intent.sourceId)) {
+        pendingReset = null
+        publish(loaded.data)
+        return
+      }
+      if (current.status === 'idle' || current.status === 'completed' || current.id !== intent.sourceId) {
+        publish(snapshot.data, 'Stored timer state changed. Pending reset was retained; no data was overwritten.')
+        return
+      }
+      save({ ...loaded.data, timer: intent.timer,
+        sessions: intent.session ? [...loaded.data.sessions, intent.session] : loaded.data.sessions })
+      return
+    }
     if (!pendingData) {
       prepare()
       return
@@ -183,7 +213,7 @@ export function createTimerController(
       prepare()
     },
     restore() {
-      if (pendingData) return
+      if (pendingData || pendingReset) return
       recovering = true
       prepare()
     },

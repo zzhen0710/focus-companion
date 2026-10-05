@@ -3,6 +3,10 @@ import FocusPage from '../features/focus/FocusPage'
 import TasksPage from '../features/tasks/TasksPage'
 import InsightsPage from '../features/insights/InsightsPage'
 import ProfilePage from '../features/profile/ProfilePage'
+import HistoryPage from '../features/history/HistoryPage'
+import DailyReviewPanel from '../features/review/DailyReviewPanel'
+import { useDailyReview } from '../features/review/useDailyReview'
+import { isReviewEligible } from '../domain/dailyReview'
 import { useFocusTimer } from '../features/focus/useFocusTimer'
 import { useTasks } from '../features/tasks/useTasks'
 import { retryStorage } from './services'
@@ -11,6 +15,7 @@ import './App.css'
 const areas = [
   { path: '#/focus', label: 'Focus', Page: null },
   { path: '#/tasks', label: 'Tasks', Page: null },
+  { path: '#/history', label: 'History', Page: HistoryPage },
   { path: '#/insights', label: 'Insights', Page: InsightsPage },
   { path: '#/profile', label: 'Profile', Page: ProfilePage },
 ]
@@ -28,6 +33,8 @@ export default function App() {
   const area = useSyncExternalStore(subscribeToNavigation, currentArea)
   const { snapshot, controller } = useFocusTimer()
   const { snapshot: tasks, service } = useTasks()
+  const review = useDailyReview(snapshot.now, !!snapshot.data && !snapshot.error)
+  const pendingReview = review.snapshot.data?.tasks.filter((task) => isReviewEligible(task, review.snapshot.today)).length ?? 0
 
   useEffect(() => {
     if (window.location.hash !== area.path) {
@@ -49,7 +56,7 @@ export default function App() {
           <p className="brand">Focus Companion</p>
           <p className="brand-note">Built for accountability, not attention.</p>
         </div>
-        <span className="version-label">v0.3 · Tasks Core</span>
+        <span className="version-label">v0.4 · History & Daily Review</span>
       </header>
       <nav className="primary-nav" aria-label="Main navigation">
         {areas.map(({ path, label }) => (
@@ -59,10 +66,12 @@ export default function App() {
         ))}
       </nav>
       <main id="main-content" tabIndex={-1}>
-        {(snapshot.error || tasks.error) && <div className="storage-message">
-          <p role="status">{snapshot.error ?? tasks.error}</p>
+        {(snapshot.error || tasks.error || review.snapshot.error) && <div className="storage-message">
+          <p role="status">{snapshot.error ?? tasks.error ?? review.snapshot.error}</p>
           <button type="button" onClick={retryStorage}>Retry saving / loading</button>
         </div>}
+        {pendingReview > 0 && <button type="button" onClick={review.service.open}>Review pending work ({pendingReview})</button>}
+        <DailyReviewPanel snapshot={review.snapshot} service={review.service} />
         {area.path === '#/tasks' ? <TasksPage snapshot={tasks} service={service} now={snapshot.now} />
           : Page ? <Page /> : <FocusPage snapshot={snapshot} controller={controller} tasks={tasks.data?.tasks ?? []} />}
       </main>

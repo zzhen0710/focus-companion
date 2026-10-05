@@ -10,6 +10,7 @@ interface StartedTimer {
   accumulatedMs: number
   taskId: string | null
   categoryId: string | null
+  taskTitleSnapshot: string | null
 }
 
 export type TimerState =
@@ -19,7 +20,7 @@ export type TimerState =
   | (StartedTimer & { status: 'completed'; endedAt: number })
 
 export type TimerAction =
-  | { type: 'start'; id: string; taskId?: string | null; categoryId?: string | null }
+  | { type: 'start'; id: string; taskId?: string | null; categoryId?: string | null; taskTitleSnapshot?: string | null }
   | { type: 'pause' }
   | { type: 'resume' }
   | { type: 'reset' }
@@ -51,7 +52,7 @@ export function reconcileTimer(timer: TimerState, now: number): TimerState {
   return {
     status: 'completed', mode: timer.mode, id: timer.id, startedAt: timer.startedAt,
     durationMs: timer.durationMs, accumulatedMs: timer.durationMs,
-    taskId: timer.taskId, categoryId: timer.categoryId,
+    taskId: timer.taskId, categoryId: timer.categoryId, taskTitleSnapshot: timer.taskTitleSnapshot,
     endedAt: timer.runStartedAt + timer.durationMs - timer.accumulatedMs,
   }
 }
@@ -82,13 +83,14 @@ export function transitionTimer(timer: TimerState, action: TimerAction, settings
       return { status: 'running', mode: timer.mode, id: action.id, startedAt: now,
         durationMs, accumulatedMs: 0, runStartedAt: now,
         taskId: timer.mode === 'focus' ? action.taskId ?? null : null,
-        categoryId: timer.mode === 'focus' ? action.categoryId ?? null : null }
+        categoryId: timer.mode === 'focus' ? action.categoryId ?? null : null,
+        taskTitleSnapshot: timer.mode === 'focus' ? action.taskTitleSnapshot ?? null : null }
     }
     case 'pause':
       if (timer.status !== 'running') return timer
       return { status: 'paused', mode: timer.mode, id: timer.id, startedAt: timer.startedAt,
         durationMs: timer.durationMs, accumulatedMs: elapsedMs(timer, now),
-        taskId: timer.taskId, categoryId: timer.categoryId }
+        taskId: timer.taskId, categoryId: timer.categoryId, taskTitleSnapshot: timer.taskTitleSnapshot }
     case 'resume':
       if (timer.status !== 'paused') return timer
       return { ...timer, status: 'running', runStartedAt: Math.max(timer.startedAt, now) }
@@ -100,11 +102,14 @@ export function transitionTimer(timer: TimerState, action: TimerAction, settings
   }
 }
 
-export function isTimerState(value: unknown, requireTarget = true): value is TimerState {
+export function isTimerState(value: unknown, requireTarget = true, requireSnapshot = true): value is TimerState {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
   const timer = value as Record<string, unknown>
   if (!['focus', 'shortBreak', 'longBreak'].includes(String(timer.mode))) return false
   if (timer.status === 'idle') return true
+  if (requireSnapshot && !(timer.taskTitleSnapshot === null ||
+    (typeof timer.taskTitleSnapshot === 'string' && !!timer.taskTitleSnapshot.trim()))) return false
+  if (requireSnapshot && (timer.mode !== 'focus' || timer.taskId === null) && timer.taskTitleSnapshot !== null) return false
   const reference = (v: unknown) => v === null || (typeof v === 'string' && !!v.trim())
   if (requireTarget && (!reference(timer.taskId) || !reference(timer.categoryId) ||
     (timer.mode !== 'focus' && (timer.taskId !== null || timer.categoryId !== null)) ||

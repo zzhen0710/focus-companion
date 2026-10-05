@@ -5,25 +5,28 @@ Built for accountability, not attention.
 The approved long-term direction is Companion + Environment + Atmosphere,
 supported by reliable lightweight productivity tools. A persistent personal
 focus scene and quiet virtual companion are future experience stages; they are
-not implemented in v0.3. The current pages are a foundation for validating the
+not implemented in v0.4. The current pages are a foundation for validating the
 productivity core. See PRODUCT.md and ROADMAP.md for the revised staging.
 
-## Current scope: v0.3 — Tasks Core
+## Current scope: v0.4 — History & Daily Review Core
 
 A local, single-user React + TypeScript + Vite application with a responsive
-shell, hash navigation for Focus / Tasks / Insights / Profile, a light visual
+shell, hash navigation for Focus / Tasks / History / Insights / Profile, a light visual
 foundation, explicit domain types, and browser-local persistence.
 
 Focus includes a timestamp-based timer with Focus, Short break, and Long break
 modes; Start, Pause, Resume, and Reset; duration configuration; and completion
 feedback. Tasks includes basic local task management and optional Task-to-Focus
-binding. Insights and Profile remain placeholders. There is no history UI,
-analytics, editable profile, account, networking, or social functionality.
+binding. History and Daily Review preserve outcomes without an analytics dashboard.
+Insights and Profile remain placeholders. There is no analytics, editable profile,
+account, networking, or social functionality.
 
 ## Tasks behavior
 
-Create, edit, complete, reopen, delete, and move tasks up/down. Completed tasks
-remain editable; repeated completion retains the original completion timestamp.
+Create, edit, complete, drop, reopen, delete, and move tasks up/down. Lifecycle is
+open → completed/dropped → open through Reopen; terminal states cannot change
+directly to one another. Completed/dropped tasks remain editable; repeated actions
+retain original timestamps and create no duplicate events.
 Content is optional plain text. Manual order is the persisted task-array order;
 movement controls appear in the unfiltered list.
 
@@ -32,30 +35,67 @@ or an inclusive date range. Dates must be real YYYY-MM-DD dates; times are HH:mm
 with start strictly before end and no overnight windows. Missing endpoints are
 rejected. Equal date-range endpoints are allowed. Planned values remain floating
 local calendar values across timezone changes. Creation/completion are timestamps.
-The UI exposes All dates, Today, and Unscheduled plus completion filters. All
-keeps past unfinished tasks accessible. Pure helpers also support Tomorrow,
+The UI exposes All dates, Today, and Unscheduled with Status filters All tasks,
+Open, Completed, and Dropped. The default is All dates / Open. View and Status
+persist independently under `focus-companion:ui:task-view`; invalid/unavailable
+preferences safely fall back to that default without blocking application data.
+All dates keeps past unfinished tasks accessible. Pure helpers also support Tomorrow,
 Monday-based This Week, This Month, and Later (starting after the current month).
 
 Before Start, choose an open task or No task. Start validates the latest stored
 task and captures its task/category IDs. Running and Paused periods lock the
 target, including after refresh recovery. Task edits or completion do not change
-the captured IDs or manipulate the timer. Natural Focus completion records those
-IDs; breaks carry no target. An unfinished timer's target cannot be deleted.
-Later task deletion leaves historical sessions unchanged. Missing references
+the captured IDs or manipulate the timer. Start also captures the task title;
+completed/interrupted records keep it despite later task corrections. Breaks carry
+no target. An unfinished timer's target cannot be deleted, with rejection feedback
+inside the confirmation. Later task deletion leaves historical sessions/events/reviews unchanged. Missing references
 have safe fallback labels. Existing categories are selectable when present;
 there is no category creation or management UI.
 
-This is an intentionally basic validation UI; v0.3 manual acceptance passed.
+New-task creation gives an inline hint and local confirmation for an existing
+open Task with the same title after trimming surrounding whitespace only.
+Comparison is case-sensitive. Back preserves the draft; Create Anyway permits
+duplicates through normal validation. Editing never triggers this warning.
+No suppression preference or notification framework is included.
+
+This is an intentionally basic validation UI; v0.4 manual acceptance passed.
 There are no recurring tasks, subtasks, reminders, attachments, rich text, audit
-log, Daily Review, interrupted sessions, drag/drop, or companion/scene features.
+framework, drag/drop, or companion/scene features.
+
+## History and Daily Review
+
+Immutable Task events record Complete, Drop, Reopen, and genuine schedule changes,
+with small title/schedule snapshots. Corrections to title/content/category and
+list ordering create no events. History groups FocusSessions, TaskEvents, and
+completed Reviews by local occurrence date, newest first with deterministic ties.
+Legacy titles remain unknown. There are no filters, charts, rates, or aggregate totals.
+
+Review collects open date tasks before today and date ranges ending before today.
+Unscheduled/current/future/completed/dropped tasks are excluded, including expired
+time windows on the current day. A fresh safe app document prompts once; Dismiss
+does not resolve work. A visible pending-work button reopens Review. Navigation,
+background changes, and ticks do not repeatedly prompt; date changes update eligibility.
+
+A bounded review draft survives reload. Complete records now, Move requires an
+explicit changed valid schedule that is no longer overdue (including deliberate
+Unscheduled), and Drop preserves the entity. Actual linked events determine the
+summary. Outside changes simply remove queued work; an empty draft with no real
+review actions is cancelled, otherwise completed. Each action and final summary
+metadata save atomically. No reviews are fabricated for missed calendar days.
 
 ## Timer behavior
 
 Choose a mode and press Start. Pause freezes focused time; Resume continues from
 the accumulated running time. Reset confirms abandonment of an unfinished
-period and creates no session record. Only naturally completed Focus periods
-create FocusSession records; breaks do not. There is no Finish early action or
-interrupted-session model. The next period always starts manually.
+period. Natural completion records `completed`; explicit unfinished Focus Reset
+records `interrupted` only when trustworthy time reaches one full second. Actual
+interrupted seconds are floored, clamped to planned duration, and exclude pauses
+and unverified closed-page gaps. Zero/subsecond Reset and all Breaks create no
+FocusSession. There is no Finish early action. The next period starts manually.
+
+Interrupted Reset and Idle save together. On failure the intent/time is frozen
+and controls remain blocked until Retry saves it once. Losing that page cannot
+fabricate its unsaved interruption; cold recovery uses saved progress as before.
 
 Duration settings accept whole minutes from 1 to 180 while idle or completed.
 Each started period captures its duration. A running timer continues across
@@ -105,7 +145,8 @@ git diff --check
 `npm run preview` serves the production build locally after `npm run build`.
 Tests cover live timestamp recovery, conservative new-instance/BFCache recovery,
 checkpoints, completion idempotency, storage failures, Task operations/schedules,
-calendar boundaries, captured targets, and v1-to-v2-to-v3 migration.
+calendar boundaries, captured targets/titles, interruption retries, immutable
+history, review eligibility/resume/summary, and v1-to-v2-to-v3-to-v4 migration.
 Manual v0.2 acceptance covered timer controls, navigation, natural completion,
 keyboard access, narrow layouts, conservative refresh/close/reopen recovery,
 Resume after recovery, reopening past the original deadline without an incorrect
@@ -119,23 +160,34 @@ inside the confirmation area, preserves useful state, and allows deletion after
 Reset without removing historical sessions. No new browser retest is claimed
 for that final feedback change.
 
+v0.4 History & Daily Review Core and all approved small UX corrections passed
+manual acceptance as reported by the user. The final automated suite contains
+210 tests across 15 files, including case-sensitive duplicate detection and
+isolated Task workspace preferences. This documentation closeout does not claim
+new browser, sleep/wake, or storage-denial manual tests.
+
 ## Structure and persistence
 
 - `src/app`: application shell, navigation, and shared service composition.
-- `src/features`: Focus UI/controller/lifecycle, Task UI/service, Insights/Profile placeholders.
+- `src/features`: Focus, Tasks, History, Review, and Insights/Profile placeholders.
 - `src/domain`: domain contracts and pure timer, Task, and calendar logic.
 - `src/storage`: storage interface, defaults, localStorage adapter, and tests.
 - `src/styles`: CSS tokens and global styles.
 
 The adapter uses the localStorage key `focus-companion:data` with
-`schemaVersion: 3`, task/category/session arrays, settings, and timer state.
-Defaults remain 1500/300/900 seconds. Pure v1 → v2 → v3 migrations add an idle
+`schemaVersion: 4`, task/category/session/event/review collections, settings,
+timer state, and a nullable active review draft.
+Defaults remain 1500/300/900 seconds. Pure v1 → v2 → v3 → v4 migrations add an idle
 timer at v2, then nullable Task content, unscheduled schedules, and nullable
-captured timer targets at v3. Existing records, array order, completion facts,
+captured timer targets at v3; v4 adds lifecycle, completed outcome/planned duration,
+unknown title snapshots, and empty historical/review collections. No old Task events,
+interrupted records, or Reviews are invented. Existing records, array order, completion facts,
 settings, and timer timing are preserved. Loading migrations does not write or
 recover a timer; the controller applies conservative recovery and saves
-explicitly. Failed writes leave the old document intact. Navigation, pre-start
-task selection, calendar filters, and derived statistics are not persisted.
+explicitly. Failed writes leave the old document intact. Task View/Status are
+presentation preferences in their separate key, not schema v4 fields. Navigation,
+pre-start task selection, editor/confirmation state, and derived statistics are
+not persisted.
 
 A small local Task service validates each mutation against the latest stored
 document and publishes success only after saving. Task and timer writes merge
@@ -158,7 +210,7 @@ Manual system-clock changes can affect timestamp-derived time; negative deltas
 are clamped, but advanced clock-change recovery is not implemented.
 Throttling, freezing, abrupt termination, and failed writes can leave stale
 checkpoints; conservative recovery may undercount legitimate running time by
-more than five seconds. v0.3 extends metadata in schema v3 without changing these
+more than five seconds. v0.4 extends metadata in schema v4 without changing these
 recovery semantics or adding dependencies.
 
 Runtime assets are served locally, with no external fonts or services. The app

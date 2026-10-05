@@ -6,9 +6,10 @@ The project should grow through small, usable versions rather than large feature
 
 Each version should remain stable enough to use before moving to the next one.
 
-v0.1, v0.2, and v0.3 are completed; v0.3 manual acceptance passed. Sections from
-v0.4 onward are approved future scope, not completed features or authorization
-to implement them. v0.3's scope below is retained as its delivery reference.
+v0.1 through v0.4 are completed; v0.4 and its approved UX corrections passed
+manual acceptance. Sections from v0.5 onward are approved future scope, not
+completed features or authorization to implement them. Earlier scope sections
+are retained as delivery references.
 
 ---
 
@@ -127,17 +128,20 @@ Preserve what happened and validate a lightweight daily review workflow.
 
 - focus and task history
 - record completed and interrupted focus periods with distinguishable outcomes
-- both outcomes contribute their actual focused time to total focus time
+- preserve actual focused time from both outcomes for future Insights totals
 - preserve start/end time, duration, and task/category relationships where applicable
-- session history, useful date filtering, and daily/task/category focus totals
+- basic chronological session/task history; no date filtering or aggregate totals in v0.4
 - daily review of unresolved prior-day tasks
 - review outcomes such as complete, move/reschedule, or drop where appropriate
 - local History/Review application boundaries introduced when needed
 - simple UI primarily used to validate the workflow
 
-The interrupted-session model, precise interruption rules, task-history semantics,
-and review outcomes still require a concrete version plan. Interrupted recording
-belongs here, not v0.2 or v0.3. Related Insights metrics belong to v0.5.
+Delivered v0.4 records explicit unfinished Focus Reset at one full trustworthy
+second or more as interrupted; lifecycle/recovery does not create interruptions.
+Task lifecycle events, immutable snapshots, and resumable Complete/Move/Drop
+Review are implemented. Final semantics are in README.md and ARCHITECTURE.md.
+Interrupted recording belongs here, not v0.2 or v0.3. Related totals, rates,
+trends, and History date filtering remain v0.5; this closeout does not start it.
 
 ---
 
@@ -147,7 +151,8 @@ Support useful reflection with restrained analytics presentation.
 
 ### Planned scope
 
-- focused time including actual time from completed and interrupted periods
+- daily/task/category aggregate focused time including actual time from completed and interrupted periods
+- useful History date filtering
 - completed/interrupted distinction, completed count, interrupted count, and completion rate
 - task completion and useful daily/weekly trends
 - task/focus relationships and category/time comparisons where justified

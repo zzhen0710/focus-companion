@@ -120,11 +120,12 @@ export default function FocusPage({ snapshot, controller, tasks }: {
           </label>)}
         </fieldset>
         {timer.mode === 'focus' && <div>
-          {active ? <p>Focus target: {timer.taskId ? tasks.find((task) => task.id === timer.taskId)?.title ?? 'Unavailable task' : 'No task'}</p>
+          {active ? <p>Focus target: {timer.taskTitleSnapshot ?? (timer.taskId
+            ? `Current task: ${tasks.find((task) => task.id === timer.taskId)?.title ?? 'Unavailable task'}` : 'No task')}</p>
             : <label>Focus task<select value={selectedTask} disabled={disabled} onChange={(event) => setSelectedTask(event.target.value)}>
               <option value="">No task</option>
-              {selectedTask && !tasks.some((task) => task.id === selectedTask && !task.completed) && <option value={selectedTask}>Unavailable or completed task</option>}
-              {tasks.filter((task) => !task.completed).map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}
+              {selectedTask && !tasks.some((task) => task.id === selectedTask && task.status === 'open') && <option value={selectedTask}>Unavailable or closed task</option>}
+              {tasks.filter((task) => task.status === 'open').map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}
             </select></label>}
           <p role="status">{targetMessage}</p>
         </div>}
@@ -147,9 +148,9 @@ export default function FocusPage({ snapshot, controller, tasks }: {
           }}>Keep period</button>}
         </div>
         {active && confirmReset && <p className="timer-note" role="status">
-          Abandon this unfinished period? No focus session will be saved.
+          Abandon this unfinished period? Focus time of at least one full second will be saved as interrupted. Breaks create no record.
         </p>}
-        <p className="timer-note">Periods start manually. Reset abandons unfinished time.</p>
+        <p className="timer-note">Periods start manually. Reset retains meaningful Focus time as interrupted.</p>
       </div>
       <DurationSettings settings={settings} disabled={active || disabled} controller={controller} />
     </section>

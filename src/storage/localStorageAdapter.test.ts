@@ -14,6 +14,22 @@ function fixture(initial: string | null = null) {
 }
 
 describe('local storage boundary', () => {
+  it.each(['orphan', 'duplicate', 'bad-snapshot', 'bad-review', 'bad-interruption'])('protects invalid v4 history: %s', (caseName) => {
+    const data = createDefaultData()
+    const event = { id: 'event', taskId: 'task', categoryId: null, reviewId: null, occurredAt: 1000,
+      type: 'taskCompleted' as const, taskSnapshot: { title: 'Read', schedule: { kind: 'unscheduled' as const } } }
+    let invalid: unknown = data
+    if (caseName === 'orphan') invalid = { ...data, taskEvents: [{ ...event, reviewId: 'missing' }] }
+    if (caseName === 'duplicate') invalid = { ...data, taskEvents: [event, event] }
+    if (caseName === 'bad-snapshot') invalid = { ...data, taskEvents: [{ ...event, taskSnapshot: { title: 'Read', schedule: { kind: 'date', date: '2026-02-29', timeRange: null } } }] }
+    if (caseName === 'bad-review') invalid = { ...data, activeReview: { id: 'review', startedAt: 0, localDate: '2026-10-06', taskIds: ['task', 'task'] } }
+    if (caseName === 'bad-interruption') invalid = { ...data, sessions: [{ id: 'session', startedAt: 0, endedAt: 1000, taskId: null, categoryId: null,
+      taskTitleSnapshot: null, outcome: 'interrupted', durationSeconds: .5, plannedDurationSeconds: 2 }] }
+    const raw = JSON.stringify(invalid), { adapter, values } = fixture(raw)
+    expect(adapter.load().status).toBe('invalid')
+    expect(adapter.save(data).status).toBe('blocked')
+    expect(values.get(STORAGE_KEY)).toBe(raw)
+  })
   it.each([
     { kind: 'date', date: '2026-02-29', timeRange: null },
     { kind: 'unscheduled', date: '2026-10-06' },
@@ -21,7 +37,7 @@ describe('local storage boundary', () => {
   ])('protects invalid schema v3 task schedules %j', (schedule) => {
     const data = createDefaultData()
     const raw = JSON.stringify({ ...data, tasks: [{ id: 'task', title: 'Keep', content: null, schedule,
-      categoryId: null, completed: false, createdAt: 0, completedAt: null }] })
+      categoryId: null, status: 'open', droppedAt: null, createdAt: 0, completedAt: null }] })
     const { adapter, values } = fixture(raw)
     expect(adapter.load().status).toBe('invalid')
     expect(adapter.save(data).status).toBe('blocked')
@@ -71,9 +87,9 @@ describe('local storage boundary', () => {
   it('round-trips every domain record and duration unit', () => {
     const { adapter } = fixture()
     const data = createDefaultData()
-    data.tasks.push({ id: 'task-1', title: 'Read', categoryId: 'category-1', completed: true, createdAt: 1000, completedAt: 3000, content: null, schedule: { kind: 'unscheduled' } })
+    data.tasks.push({ id: 'task-1', title: 'Read', categoryId: 'category-1', status: 'completed', droppedAt: null, createdAt: 1000, completedAt: 3000, content: null, schedule: { kind: 'unscheduled' } })
     data.categories.push({ id: 'category-1', name: 'Reading', createdAt: 1000 })
-    data.sessions.push({ id: 'session-1', taskId: 'task-1', categoryId: 'category-1', startedAt: 1000, endedAt: 3000, durationSeconds: 2 })
+    data.sessions.push({ id: 'session-1', taskId: 'task-1', categoryId: 'category-1', startedAt: 1000, endedAt: 3000, durationSeconds: 2, plannedDurationSeconds: 2, outcome: 'completed' as const, taskTitleSnapshot: null })
     expect(adapter.save(data).status).toBe('saved')
     expect(adapter.load()).toEqual({ status: 'ready', data })
   })
@@ -94,7 +110,7 @@ describe('local storage boundary', () => {
   })
 
   it('preserves unsupported schema versions', () => {
-    const raw = JSON.stringify({ ...createDefaultData(), schemaVersion: 4 })
+    const raw = JSON.stringify({ ...createDefaultData(), schemaVersion: 5 })
     const { adapter, values } = fixture(raw)
     expect(adapter.load()).toEqual({ status: 'unsupported' })
     expect(adapter.save(createDefaultData())).toEqual({ status: 'blocked' })

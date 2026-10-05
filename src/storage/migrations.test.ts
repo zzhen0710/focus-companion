@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createLocalStorageAdapter } from './localStorageAdapter'
-import { migrateV1ToV2, migrateV2ToV3 } from './migrations'
+import { migrateV1ToV2, migrateV2ToV3, migrateV3ToV4 } from './migrations'
 import { createDefaultData } from './storage'
 import type { LegacyAppData, V2AppData } from './storage'
 
@@ -34,7 +34,7 @@ describe('v1 to v2 migration', () => {
     if (result.status !== 'ready') throw new Error('Expected migrated data')
     expect(result.needsMigration).toBe(true)
     expect(adapter.save(result.data).status).toBe('saved')
-    expect(JSON.parse(raw)).toEqual(migrateV2ToV3(migrateV1ToV2(legacy())))
+    expect(JSON.parse(raw)).toEqual(migrateV3ToV4(migrateV2ToV3(migrateV1ToV2(legacy()))))
   })
 
   it('leaves the original v1 document intact when migration cannot be saved', () => {
@@ -76,10 +76,10 @@ describe('v2 to v3 migration', () => {
       timer: status === 'idle' ? timer : { ...timer, taskId: null, categoryId: null } })
     let raw = before
     const storage = createLocalStorageAdapter(() => ({ getItem: () => raw, setItem: (_key, value) => { raw = value } }))
-    expect(storage.load()).toEqual({ status: 'ready', data: migrated, needsMigration: true })
+    expect(storage.load()).toEqual({ status: 'ready', data: migrateV3ToV4(migrated), needsMigration: true })
     expect(raw).toBe(before)
-    storage.save(migrated)
-    expect(JSON.parse(raw)).toEqual(migrated)
+    storage.save(migrateV3ToV4(migrated))
+    expect(JSON.parse(raw)).toEqual(migrateV3ToV4(migrated))
   })
   it('keeps original v2 bytes on a failed migration write', () => {
     const raw = JSON.stringify(migrateV1ToV2(legacy()))
@@ -88,5 +88,40 @@ describe('v2 to v3 migration', () => {
     if (loaded.status !== 'ready') throw new Error('Expected migrated data')
     expect(storage.save(loaded.data).status).toBe('unavailable')
     expect(JSON.parse(raw).schemaVersion).toBe(2)
+  })
+})
+
+describe('v3 to v4 migration', () => {
+  it.each(['idle', 'running', 'paused', 'completed'] as const)('truthfully preserves populated v3 and %s without recovery or fabricated history', (status) => {
+    const old = migrateV2ToV3(migrateV1ToV2(legacy()))
+    old.tasks.push({ ...old.tasks[0], id: 'unknown', completed: true, completedAt: null })
+    old.tasks.push({ ...old.tasks[0], id: 'odd', completed: false, completedAt: 2000 })
+    const base = { mode: 'focus' as const, id: 'active', taskId: 'task', categoryId: 'category', startedAt: 1000, durationMs: 2000 }
+    old.timer = status === 'idle' ? { status, mode: 'focus' } : status === 'running' ? { ...base, status, accumulatedMs: 500, runStartedAt: 1500 }
+      : status === 'paused' ? { ...base, status, accumulatedMs: 500 } : { ...base, status, accumulatedMs: 2000, endedAt: 3000 }
+    const before = JSON.stringify(old), next = migrateV3ToV4(old)
+    expect(JSON.stringify(old)).toBe(before)
+    expect(next.tasks.map((task) => [task.id, task.status, task.completedAt])).toEqual([
+      ['task', 'completed', 2000], ['unknown', 'completed', null], ['odd', 'open', 2000]])
+    expect(next.sessions[0]).toEqual({ ...old.sessions[0], outcome: 'completed', plannedDurationSeconds: 1, taskTitleSnapshot: null })
+    expect(next.taskEvents).toEqual([]); expect(next.reviews).toEqual([]); expect(next.activeReview).toBeNull()
+    expect(next.timer).toEqual(status === 'idle' ? old.timer : { ...old.timer, taskTitleSnapshot: null })
+    let raw = before
+    const storage = createLocalStorageAdapter(() => ({ getItem: () => raw, setItem: (_key, value) => { raw = value } }))
+    expect(storage.load()).toEqual({ status: 'ready', data: next, needsMigration: true })
+    expect(raw).toBe(before)
+    expect(storage.save(next).status).toBe('saved')
+    expect(JSON.parse(raw)).toEqual(next)
+  })
+  it('retains a failed v3 write and accepted zero-duration legacy session without invented events', () => {
+    const old = migrateV2ToV3(migrateV1ToV2(legacy()))
+    old.sessions[0].durationSeconds = 0
+    const raw = JSON.stringify(old)
+    const storage = createLocalStorageAdapter(() => ({ getItem: () => raw, setItem: () => { throw Error('Quota') } }))
+    const loaded = storage.load()
+    if (loaded.status !== 'ready') throw Error('Expected ready')
+    expect(loaded.data.sessions[0]).toMatchObject({ durationSeconds: 0, plannedDurationSeconds: 0, outcome: 'completed' })
+    expect(storage.save(loaded.data).status).toBe('unavailable')
+    expect(raw).toBe(JSON.stringify(old))
   })
 })
