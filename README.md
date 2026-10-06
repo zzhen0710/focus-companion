@@ -8,6 +8,12 @@ focus scene and quiet virtual companion are future experience stages; they are
 not implemented in v0.5. The current pages are a foundation for validating the
 productivity core. See PRODUCT.md and ROADMAP.md for the revised staging.
 
+v0.1-v0.5 are completed. Pre-v0.6 documentation consolidation archives the next
+bridge stage, Experience Contracts & Art Direction; v0.6 is not implemented.
+See [Experience Contracts](docs/experience-contracts.md) and
+[Art Direction](docs/art-direction.md) for approved future boundaries. Production
+Main Scene integration remains v0.7, with atmosphere/personalization in v0.8.
+
 ## Current scope: v0.5 — Insights Core
 
 A local, single-user React + TypeScript + Vite application with a responsive

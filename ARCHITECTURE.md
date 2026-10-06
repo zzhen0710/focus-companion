@@ -158,6 +158,42 @@ domain types into the productivity core or speculative asset infrastructure.
 Rendering technology (2D, Live2D-like, 3D, or another approach), media-storage
 technology, exact service contracts, and experience mappings remain undecided.
 
+### Approved pre-v0.6 experience boundary (not implemented)
+
+The completed v0.1-v0.5 core supports the following future read-side direction:
+
+```text
+Persisted Facts -> Read-only Insights -> Experience Context
+Persisted Facts ----------------------> Experience Context
+Live timer / transient selection ------> Experience Context
+Experience Context -> Experience Rules -> Expression Intent
+Expression Intent -> Companion / Scene / Utility UI / future audio
+```
+
+Context is a curated read-only projection, not raw AppData or service objects.
+Live timer status/progress and transient Task selection need not pass through
+persisted Insights. Preserve committed facts, pending actions, historical
+snapshots, live state, and unavailable/stale data distinctly. Failed reads are
+not zero activity; unsaved actions are not historical facts. Existing timer
+functions remain authoritative, and saved Focus totals retain v0.5 semantics.
+
+Rules arbitrate attention deterministically: at most one primary reaction and
+one compatible ambient cue; silence is valid. Stable fact identity, deduplication,
+suppression, cooldown, once-per-session behavior, and expiration prevent tick,
+checkpoint, reload, and retry publication from becoming repeated reactions.
+Initial loading must not replay history, nor should missed cues form a backlog.
+
+Expression Intent describes meaning, not rendering technology. Domain facts
+must not directly command presentation or assign emotional judgment to an
+interruption. User commands continue through existing application services;
+context reads and visual expression do not execute workflow mutations. No LLM /
+AI Agent is planned before v1.0; later AI needs separate approval.
+
+Detailed contracts are in [Experience Contracts](docs/experience-contracts.md).
+This direction does not introduce code, schema fields, persisted aggregates,
+reaction-history records, a repository framework, or an event bus. v0.6 planning
+should stabilize only the actual boundaries required by its small prototype.
+
 ---
 
 ## 4.2 Organize Around Features
@@ -693,6 +729,59 @@ frequent navigation between themed rooms or a large independent Task Wall.
 Exact surfaces and layout remain art/interaction decisions for their roadmap
 stages. The first companion release prioritizes one polished default companion
 and one polished default environment. Profile/social features remain later scope.
+
+## Approved future presentation lifetimes
+
+One persistent App Shell / Main Scene does not mean one giant React component.
+The conceptual children are EnvironmentLayer, CompanionLayer, GlobalUiHandle,
+UtilityLaunchers, and one ActivePanel. These components do not exist in v0.5.
+Application services and timer lifecycle must survive panel mounting changes.
+Routing may remain for compatibility, tests, development, and deep links; the
+future route adapter must not replace the scene or duplicate panel-state ownership.
+Exact hash/history behavior awaits implementation planning.
+
+Immersive / utility-ready / active-panel state controls presentation only.
+Collapse hides the panel and launchers; reveal normally restores launchers only.
+Non-destructive drafts generally survive temporary hiding/switching in memory,
+without autosave. Destructive confirmations require renewed intent after hiding.
+Review's durable cohort remains separate from panel visibility. No presentation
+transition may imply Task submission, Review resolution, Focus Pause/Reset, or
+confirmation. Detailed interaction and error contracts are in
+[Experience Contracts](docs/experience-contracts.md).
+
+Future Settings distinguishes business settings, UI preferences, experience
+preferences, and media preferences. Preserve the existing Task View/Status key;
+do not force all preferences into schema v4 or invent per-component storage and
+a generic framework. Priority remains deferred: Closed is only grouping, and
+priority-aware ordering needs a separately approved domain/migration policy.
+
+## Known scene migration concerns in the current code
+
+These are migration concerns, not current authorization to rewrite the core:
+
+- App.tsx swaps feature pages; Review may auto-open on safe entry and appear
+  alongside the selected page. The future scene requires intentional Review
+  opening and one major panel; current behavior remains unchanged.
+- Focus selection/settings drafts, Task forms, and confirmations have component
+  lifetimes. Panel integration must deliberately preserve useful drafts and
+  clear hidden destructive confirmations without mutating business data.
+- Storage errors currently sit above page content. Immersive mode needs
+  discoverable failure/retry state even when the utility layer is hidden.
+- History/Insights lifecycle refresh is tied to mounted hooks. Always-present
+  experience context needs read-only freshness independent of panel visibility,
+  including availability and local calendar context, not per-tick aggregation.
+- reviewService.reload() can settle and save a draft. It is not a pure read;
+  context collection must not call it merely to obtain facts. Existing shared
+  successful-write composition is workflow-aware and remains unchanged.
+- FocusPage.css includes global button/input rules that could style scene
+  controls accidentally. Scope ownership should be reviewed when rehosting UI.
+- Pre-start selected Task, captured Focus target, current Task state, and
+  immutable historical title are different facts and must remain distinct.
+- Task move() swaps adjacent items in the whole array. Future priority-group
+  movement and insertion rules cannot simply reuse that presentation unchanged.
+
+v0.6 should produce contracts, a migration checklist, and an isolated prototype;
+production shell/routing/Review/error integration is v0.7 work after approval.
 
 ---
 

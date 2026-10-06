@@ -105,15 +105,41 @@ This direction preserves the core principle: Built for accountability, not atten
 
 ### Persistent Primary Scene
 
-Prefer one persistent primary scene rather than frequent navigation between
-multiple themed rooms. The companion should remain visually present for most
-of the core experience and eventually occupy a major share of the composition,
-supported by an atmospheric environment. Productivity UI should generally be
-visually subordinate once the companion stage begins.
+The approved future experience is one persistent Main Scene / App Shell. Its
+default is Companion + Environment: the user remains in the same room while
+temporarily opening tools. Focus, Tasks, Review, History, Insights, and eventual
+Settings are secondary cards, drawers, overlays, or contextual panels. This
+direction is not implemented in the current v0.5 shell.
 
-Tools may appear as drawers, overlays, compact cards, side panels, or contextual
-controls without unnecessarily replacing the scene. These are interaction
-directions, not a frozen layout or a requirement to create every surface.
+The Companion is the unique dominant visual focal point and primary visual /
+emotional anchor. The environment supports it; productivity UI remains
+subordinate. Dominance means the strongest intentional focal subject, achieved
+through scale, placement, composition, contrast, whitespace, and restrained
+utility UI, not a rigid screen percentage. The intended feeling is "a companion
+sharing a space with me", rather than a dashboard containing a character.
+
+The entire utility interface must be dismissible. The Companion and scene are
+the persistent visual experience; a minimal Global UI Handle remains available
+to reveal controls. Utilities can retreat without requiring literally zero UI
+pixels. Opening a panel must leave the Companion visually meaningful.
+
+The future handle is a quiet, small, long flat rectangle near the top edge,
+preferably upper-right. Vertical chevrons mean Show controls (`⌄`) and Hide
+controls (`⌃`); the interaction target must remain comfortably accessible.
+Immersive, utility-ready, and active-panel states permit at most one major panel.
+Reveal normally shows launchers only; collapse hides the panel and launchers.
+Selecting another tool replaces the panel; selecting the active tool may close
+it. Reopening controls does not automatically restore the previous panel.
+
+Hiding or switching utilities is a presentation action, not Task submission,
+Review resolution, Focus Pause/Reset, or destructive confirmation. Unfinished
+non-destructive drafts should generally survive in memory; dismissed destructive
+confirmations require renewed intent. When the Main Scene ships, pending Review
+should normally offer a quiet indication for intentional opening, not auto-open
+a large panel. Critical errors must remain discoverable when controls collapse;
+ordinary background errors must not automatically open a large panel without
+later explicit approval. Detailed future contracts are in
+[Experience Contracts](docs/experience-contracts.md).
 
 During v0.3-v0.5, intentionally basic pages are acceptable for validating
 behavior and local application APIs. Do not over-polish temporary SaaS-style
@@ -140,6 +166,14 @@ infinite-canvas Task Wall. Long-term Tasks should integrate lightly into the
 primary scene through drawers, side panels, contextual cards, or similar tools.
 Exact fields, date/time rules, and interactions belong to the corresponding
 implementation plan, not this direction document.
+
+Approved deferred semantics: P1 / P2 / P3, with P1 highest, provide coarse
+ordering; manual order provides fine ordering within a priority group. Future
+views may offer All Active, each priority, and Closed with Completed / Dropped.
+Closed is presentation grouping only; domain states remain open / completed /
+dropped. Priority, its migration/default policy, and ordering interactions are
+future work, not v0.6 delivery or prerequisites for v0.7. Current Up/Down controls
+may become lighter icons or card/drag reordering, with keyboard alternatives.
 
 ### History and Daily Review
 
@@ -193,6 +227,45 @@ business rules. Domain/application code must not depend on specific animations,
 room art, music, or visual implementations. A Focus state may be mapped to a
 studying companion by the experience layer; the domain does not know that visual
 representation. Exact service contracts and rendering details remain undecided.
+
+### Deterministic Context and Quiet Feedback
+
+No LLM / AI Agent is planned before v1.0. Companion intelligence should use
+deterministic product state, saved history, factual Insights, context rules, and
+expression rules. Even after v1.0, AI requires a separate product, privacy, and
+architecture decision. Do not infer tiredness, laziness, stress, productivity,
+or mood from activity. The intended feeling is "The Companion noticed what
+happened", not psychological analysis.
+
+The future experience consumes curated read-only context, preserving live
+state, committed facts, pending UI state, historical snapshots, and unavailable
+data as distinct concepts. A failed read is not zero activity; an unsaved action
+is not history. Domain facts must not directly command artistic expression.
+
+Proactivity permits at most one primary reaction plus one compatible ambient
+cue. Silence is valid. Rules must consider priority, suppression, cooldown,
+deduplication, stable fact identity, once-per-session behavior, stale expiration,
+Focus-time interruption avoidance, and suppression during user decisions.
+Opening the app must not replay historical events; missed reactions must not
+form a backlog, and ticks/checkpoints/reloads must not repeatedly trigger cues.
+
+Quiet Feedback Language has four levels: Ambient cue (low weight, no action),
+Context hint (local, informative, non-blocking), Decision prompt (explicit local
+choice, not a disappearing toast), and Blocking error (an operation cannot
+proceed, with discoverable recovery). The importance of feedback determines its
+visual weight. Define behavior before choosing bubbles, notes, letters, objects,
+cards, scene changes, or animation. All new product copy remains English,
+concise, calm, natural, direct, and visually lightweight.
+
+### Future Unified Settings
+
+Settings may group Focus, Tasks, Companion, Atmosphere, Appearance, and Data.
+Keep business settings, UI preferences, experience preferences, and media
+preferences distinct; do not force them all into the schema-v4 business document.
+The separate Task View/Status preferences are a useful precedent. Avoid both
+ad hoc storage per component and a premature generic settings framework.
+Duplicate-warning suppression is only a possible preference pending separate
+approval. Settings is not implemented by this consolidation.
 
 ---
 
@@ -367,6 +440,12 @@ Do not prematurely build the extension.
 ---
 
 ## Current Stage
+
+v0.1-v0.5 have completed the Foundation, Focus Timer, Tasks, History / Daily
+Review, and Insights business core. Approved pre-v0.6 consolidation archives the
+transition from facts and workflows toward experience architecture, Companion,
+scene, and expression. v0.6 is a bridge for contracts and Art Direction, not
+another large productivity release; implementation has not begun.
 
 The project begins as a local, single-user application.
 

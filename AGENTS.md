@@ -22,6 +22,13 @@ The project is currently in:
 
 **v0.5 — Insights Core (completed and manually accepted)**
 
+Pre-v0.6 documentation consolidation is approved. v0.1-v0.5 provide the completed
+business core; v0.6 Experience Contracts & Art Direction is the next bridge,
+not implemented or authorized by these documentation changes. Do not implement
+contracts, rules, a prototype, or production scene integration without explicit
+implementation approval. Detailed approved future requirements are in
+`docs/experience-contracts.md` and `docs/art-direction.md`.
+
 Do not implement features from later versions unless the user explicitly changes the current scope.
 
 In particular, do not prematurely implement:
@@ -158,6 +165,22 @@ embedding business rules. Domain/application code must not depend on companion
 animations, room art, music, or rendering. Do not add companion domain models,
 speculative asset systems, or choose a rendering technology prematurely.
 
+Future context is a curated read-only factual view, not raw AppData/service
+objects. Facts and read-only Insights, plus live timer/selection state, feed
+Context -> Rules -> Expression Intent -> presentation. Distinguish committed,
+live, pending, historical, stale, and unavailable state; a failed read is not
+zero and an unsaved action is not history. Context reads must not execute
+Review settlement: reviewService.reload() is workflow-capable. Timer ownership
+must outlive tool panels, and context freshness must not depend on an open
+Insights/History panel. Do not alter existing timing/recovery/write guarantees.
+
+No LLM / AI Agent is planned before v1.0; later AI needs a separate product,
+privacy, and architecture decision. Do not infer psychological states. Future
+deterministic rules permit one primary reaction plus one compatible ambient cue;
+silence is valid. Use stable identities, suppression, cooldown, expiration, and
+deduplication; no historical replay, missed-reaction backlog, or tick-triggered
+repetition. Validate a small initial set, not a reaction catalogue.
+
 ---
 
 ## Visual Direction
@@ -177,6 +200,33 @@ The long-term visual core is Companion + Environment + Atmosphere, supported by
 reliable lightweight tools. From the companion stage, prefer one persistent
 primary scene with the companion occupying a major share of the composition;
 tools may use drawers, overlays, compact cards, or side panels.
+
+The approved future Companion is the unique dominant intentional focal subject,
+without a rigid screen percentage. The scene persists; the entire utility layer
+is dismissible except a minimal accessible top-edge/upper-right Global UI Handle
+with vertical Show controls / Hide controls chevrons. Immersive, utility-ready,
+and active-panel states allow one major panel. Reveal normally shows launchers
+only; collapse hides panel and launchers. Utility hiding/switching must never
+perform business actions. Retain non-destructive drafts in memory and require
+renewed intent for hidden destructive confirmations. Future Review is opened
+intentionally, with quiet pending indication. Errors stay discoverable in
+immersive mode; ordinary background errors must not auto-open a large panel.
+
+Quiet Feedback levels are Ambient cue, Context hint, Decision prompt, and
+Blocking error; importance determines visual weight. Explicit decisions stay
+locally anchored rather than disappearing as toasts; define behavior before art.
+v0.6 is contracts and an isolated fixture prototype after planning approval;
+production Main Scene/handle/panel integration remains v0.7. Layered 2D / 2.5D
+is the first prototype preference, not a final rendering stack. Music/media,
+day/night, skins, and deeper personalization remain primarily v0.8.
+
+Deferred Priority is P1/P2/P3 (P1 highest), with manual order within groups;
+Closed is UI grouping for completed/dropped, never a domain status. Domain,
+migration/default, movement, and insertion policies need separate planning.
+Priority/drag improvements are not v0.6 delivery or prerequisites for v0.7.
+Preserve keyboard ordering alternatives. Future unified Settings keeps business,
+UI, experience, and media preferences distinct; no schema-v4 catch-all or
+premature framework. Duplicate-warning suppression needs separate approval.
 
 v0.3-v0.5 UI may remain intentionally basic to validate behavior and local
 application APIs. Do not over-polish temporary SaaS-style dashboard pages that

@@ -175,15 +175,38 @@ excessive effort polishing SaaS-style pages expected to change from v0.7.
 
 ## v0.6 — Experience Contracts & Art Direction
 
-Prepare a stable productivity core for the experience layer and begin serious
-art-direction prototyping.
+Bridge the completed v0.1-v0.5 facts/workflows into experience architecture,
+Companion, scene, and expression. This is not another large productivity-feature
+release. Pre-v0.6 consolidation is approved and documented; implementation and
+the prototype require subsequent implementation planning approval.
 
 ### Planned scope
 
-- stabilize only the application boundaries needed by the future experience layer
-- define high-level experience states and mappings from business state
-- prototype companion, environment, composition, visual language, animation, and sound direction
-- establish a visual hierarchy centered on a companion within a comfortable environment
+- consolidate only application boundaries needed by the experience layer
+- define curated read-only Experience Context, including availability/freshness
+- define live/committed/pending/historical distinctions and expression intents
+- define immersive / utility-ready / active-panel states, the Global UI Handle,
+  draft retention, error discoverability, and single-active-panel interaction
+- validate minimal deterministic Experience Rules: priority, suppression,
+  cooldown, deduplication, stable identity, expiration, and silence
+- define Quiet Feedback Language before choosing artistic expressions
+- establish Companion focal dominance and serious Art Direction
+- build one isolated fixture-based art/interaction prototype after planning approval
+- document migration concerns for existing feature shells and route compatibility
+- run regression verification that the productivity core remains unchanged
+
+Detailed approved boundaries are in [Experience Contracts](docs/experience-contracts.md)
+and [Art Direction](docs/art-direction.md). Start with layered 2D / 2.5D
+prototyping, without committing to a rendering stack. The prototype covers handle
+and one-panel interaction, composition, dense content, narrow screens, keyboard
+focus, reduced motion, and a few factual expressions; it is not final production
+art and must not risk writes to real user storage.
+
+Production Main Scene replacement remains v0.7. No Priority, drag/drop, Settings
+UI, new business workflows, large reaction catalogue, schema changes, audio
+engine, media library, day/night engine, theme/skin store, or asset pipeline are
+v0.6 deliverables. Sound direction may be considered as a boundary, not delivered
+playback. No LLM / AI Agent is planned before v1.0.
 
 Local application APIs are TypeScript interfaces, not HTTP or backend APIs.
 Experience / Scene / UI consumes Application Services -> Domain -> Persistence.
@@ -201,11 +224,19 @@ Make the companion the primary visual subject in one polished default main scene
 ### Planned scope
 
 - prioritize one high-quality default companion and one high-quality default environment
-- companion remains visually present for most of the core experience
-- connect Focus states to companion behavior through the experience layer
-- integrate lightweight Timer / Tasks / History / Review surfaces around the scene
+- Companion is persistent and the unique dominant focal subject
+- integrate the production Main Scene, Global UI Handle, and utility launchers
+- integrate existing Focus / Tasks / Review / History / Insights through one active panel
+- connect factual context to a small deterministic Companion expression set
+- retain route compatibility where useful without replacing the scene on tool changes
 - use drawers, overlays, compact cards, side panels, or contextual controls where useful
 - prioritize the core experience over adding productivity features
+
+The entire utility layer is dismissible; temporary panel switching retains
+non-destructive drafts and never implies business actions. Review should normally
+be opened intentionally from a quiet pending indication. Critical failures remain
+discoverable even in immersive mode. Optional Priority and drag/reorder work are
+not prerequisites for this release and require separate scoped approval.
 
 Prefer one persistent scene over frequent navigation between themed rooms.
 Productivity UI should generally be visually subordinate to the companion and
@@ -231,6 +262,11 @@ of the product; high customizability must not make the default complex.
 - light/dark presentation, responsive layout, keyboard access, and restrained completion notifications where appropriate
 - optional/reducible animation and sound
 - media/resource reliability, persistence, invalid-media handling, storage limits, and recovery
+- related experience/media preferences, without forcing all preferences into business data
+
+Music, ambience, day/night behavior, richer backgrounds, skins, and deeper
+personalization belong primarily here, not in the v0.6 prototype. Exact skin
+capabilities and preference/media technology remain undecided.
 
 Keep media import optional. Preserve the current clean default during core stages
 and one polished default companion environment from v0.7. Presets and simple
@@ -269,6 +305,18 @@ settings. v0.9 ends when the integrated experience is dependable for daily use.
 
 ## Future Experience Implementation Boundary
 
+Deferred Task semantics are P1 / P2 / P3 (P1 highest), coarse priority with manual
+order within each group, and All Active / per-priority / Closed presentation.
+Closed contains Completed and Dropped, not a new domain status. Priority may
+require a field, validation, migration, legacy/default policy, within-group
+movement, and priority-change insertion rules. These are not promised v0.6 work.
+Lighter ordering controls and drag/reorder retain keyboard alternatives.
+
+Future unified Settings may group Focus / Tasks / Companion / Atmosphere /
+Appearance / Data. Business, UI, experience, and media preferences remain
+distinct. Duplicate-title warning suppression is only a possible future setting
+unless separately approved; no generic preferences framework is required now.
+
 These are approved directions, not implemented features. The productivity core
 has reached v0.5; this does not start the future experience stages or alter the
 existing timer recovery guarantees. No premature companion components/domain models,
@@ -303,6 +351,10 @@ completion of every possible future feature.
 ---
 
 # Phase 2 — Connected Focus
+
+Backend, accounts, sync, real-person relationships, and broader profile/social
+functionality remain post-v1.0. Reaching v1.0 does not approve LLM / Agent work;
+any future AI proposal requires a separate product/privacy/architecture decision.
 
 Goal:
 
