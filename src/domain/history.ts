@@ -3,6 +3,8 @@ import type { TaskEvent } from './taskEvent'
 import type { ReviewRecord } from './dailyReview'
 import { reviewSummary } from './dailyReview'
 import { localCalendarDate } from './taskSchedule'
+import { isWithinCalendarWindow, resolveCalendarWindow } from './calendarWindows'
+import type { CalendarContext, HistoryPeriod } from './calendarWindows'
 
 export type HistoryEntry =
   | { kind: 'focus'; id: string; occurredAt: number; record: FocusSession }
@@ -25,4 +27,19 @@ export function groupHistory(entries: HistoryEntry[]) {
     groups.set(date, [...groups.get(date) ?? [], entry])
   }
   return [...groups].map(([date, entries]) => ({ date, entries }))
+}
+
+/** Filter facts before regrouping, so a changed local zone also refreshes dates. */
+export function filterHistory(groups: ReturnType<typeof groupHistory>, period: HistoryPeriod, context: CalendarContext) {
+  const entries = groups.flatMap((group) => group.entries)
+  const window = period === 'all' ? null : resolveCalendarWindow(period, context)
+  const filtered = window ? entries.filter((entry) => isWithinCalendarWindow(entry.occurredAt, window, context)) : entries
+  const dates = new Map<string, HistoryEntry[]>()
+  for (const entry of filtered) {
+    const date = context.dateOf(entry.occurredAt)
+    const group = dates.get(date)
+    if (group) group.push(entry)
+    else dates.set(date, [entry])
+  }
+  return [...dates].map(([date, entries]) => ({ date, entries }))
 }

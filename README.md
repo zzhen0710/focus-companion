@@ -5,10 +5,10 @@ Built for accountability, not attention.
 The approved long-term direction is Companion + Environment + Atmosphere,
 supported by reliable lightweight productivity tools. A persistent personal
 focus scene and quiet virtual companion are future experience stages; they are
-not implemented in v0.4. The current pages are a foundation for validating the
+not implemented in v0.5. The current pages are a foundation for validating the
 productivity core. See PRODUCT.md and ROADMAP.md for the revised staging.
 
-## Current scope: v0.4 — History & Daily Review Core
+## Current scope: v0.5 — Insights Core
 
 A local, single-user React + TypeScript + Vite application with a responsive
 shell, hash navigation for Focus / Tasks / History / Insights / Profile, a light visual
@@ -17,9 +17,11 @@ foundation, explicit domain types, and browser-local persistence.
 Focus includes a timestamp-based timer with Focus, Short break, and Long break
 modes; Start, Pause, Resume, and Reset; duration configuration; and completion
 feedback. Tasks includes basic local task management and optional Task-to-Focus
-binding. History and Daily Review preserve outcomes without an analytics dashboard.
-Insights and Profile remain placeholders. There is no analytics, editable profile,
-account, networking, or social functionality.
+binding. History and Daily Review preserve outcomes. Insights adds read-only
+factual summaries and a compact seven-day Focus trend. Profile remains a
+placeholder. There is no editable profile, account, networking, social, or
+Companion functionality. v0.5 and its terminology clarification passed manual
+acceptance as reported by the user.
 
 ## Tasks behavior
 
@@ -68,7 +70,9 @@ Immutable Task events record Complete, Drop, Reopen, and genuine schedule change
 with small title/schedule snapshots. Corrections to title/content/category and
 list ordering create no events. History groups FocusSessions, TaskEvents, and
 completed Reviews by local occurrence date, newest first with deterministic ties.
-Legacy titles remain unknown. There are no filters, charts, rates, or aggregate totals.
+Legacy titles remain unknown. History supports All time (default), Today,
+This week, and Last 7 days. Filtering preserves chronology and details, writes
+nothing, and distinguishes empty history from an empty selected period.
 
 Review collects open date tasks before today and date ranges ending before today.
 Unscheduled/current/future/completed/dropped tasks are excluded, including expired
@@ -82,6 +86,54 @@ Unscheduled), and Drop preserves the entity. Actual linked events determine the
 summary. Outside changes simply remove queued work; an empty draft with no real
 review actions is cancelled, otherwise completed. Each action and final summary
 metadata save atomically. No reviews are fabricated for missed calendar days.
+
+## Insights
+
+Select Today (default), This week, or Last 7 days. Weeks start Monday; Last 7
+days includes today and the preceding six local calendar dates, not 168 fixed
+hours. Current windows include only facts at or before the reference time.
+Focus uses the local ending date, without splitting cross-midnight sessions.
+This is a consistent attribution rule, not a precise allocation of each second.
+Timezone changes regroup timestamped facts; floating Task schedules stay fixed.
+
+- Focused is the sum of saved actual durationSeconds from completed and
+  interrupted sessions. Completed sessions, Interrupted sessions, and Sessions
+  are record counts.
+  Completion rate is completed / all sessions; Average session is actual total /
+  all sessions. Empty rate/average display an em dash. Valid historical
+  zero-duration sessions still count. Live/unsaved timer time and breaks do not.
+- Now shows current Open tasks and Overdue tasks, independent of the selected
+  historical period. Overdue uses exactly the Daily Review eligibility rule.
+- Task activity counts Task completions, Moved, and Dropped operations from
+  TaskEvents. Complete -> Reopen -> Complete counts two completions. Older
+  versions did not record these events; current Task timestamps cannot fill gaps.
+- Review counts completed Review records by completedAt and linked actions by
+  their own occurredAt, even while a draft remains active. Review actions are
+  subsets of Task activity; cohort size is not a processed-task count. Labels are
+  Reviews completed, Task completions through Review, Moved through Review, and
+  Dropped through Review.
+- Focus · Last 7 days always shows seven ascending daily rows with zero-filled gaps,
+  textual durations, outcome counts, and simple CSS bars. Its sum matches the
+  same period's Focus total regardless of the selected summary period.
+- Task focus groups by captured Task ID, not title. The latest non-null title
+  captured at Start within the window labels the group; edits/deletion do not
+  replace it with a current name. Unknown historical task and No task remain
+  distinct. Results sort by focused seconds descending with stable ID ties.
+
+Task completions and Focus-session outcomes describe different facts. Manually
+completing a Task creates a TaskEvent, not a FocusSession. Natural Focus completion
+records a completed session without completing the Task. Completing a Task during
+Focus, then resetting unfinished Focus, records one Task completion and one
+eligible interrupted session, never a duplicate Task completion. Daily/per-Task
+Focus outcome rows use explicit session nouns with singular/plural grammar.
+
+Summaries are read-only, not productivity judgments or recommendations. Durations
+display to tenths of a second where needed and percentages to whole percent;
+queries retain unrounded values. Period choices are not persisted. Read pages
+refresh on entry, visible focus/return, relevant storage changes, and once per
+minute while visible for date/timezone changes; throttling may delay refresh.
+Failed reads show an error rather than fake zero statistics; retained results
+are explicitly marked. No Category analytics or Task trend charts are included.
 
 ## Timer behavior
 
@@ -147,6 +199,9 @@ Tests cover live timestamp recovery, conservative new-instance/BFCache recovery,
 checkpoints, completion idempotency, storage failures, Task operations/schedules,
 calendar boundaries, captured targets/titles, interruption retries, immutable
 history, review eligibility/resume/summary, and v1-to-v2-to-v3-to-v4 migration.
+v0.5 adds coverage for factual metrics, local-calendar/DST windows, endedAt
+attribution, trend sum consistency, captured Task identity, Review subsets,
+History filters, read lifecycle, and successful-write refresh with zero query writes.
 Manual v0.2 acceptance covered timer controls, navigation, natural completion,
 keyboard access, narrow layouts, conservative refresh/close/reopen recovery,
 Resume after recovery, reopening past the original deadline without an incorrect
@@ -161,16 +216,22 @@ Reset without removing historical sessions. No new browser retest is claimed
 for that final feedback change.
 
 v0.4 History & Daily Review Core and all approved small UX corrections passed
-manual acceptance as reported by the user. The final automated suite contains
+manual acceptance as reported by the user. Its closeout automated suite contained
 210 tests across 15 files, including case-sensitive duplicate detection and
-isolated Task workspace preferences. This documentation closeout does not claim
+isolated Task workspace preferences. That closeout did not claim
 new browser, sleep/wake, or storage-denial manual tests.
+
+v0.5 Insights Core, including the Task-versus-Focus terminology clarification,
+passed manual acceptance as reported by the user. Final automated verification
+passed typecheck, lint, 258 tests across 22 files, production build, and
+git diff --check. Closeout changes are documentation only; no new browser,
+real sleep/wake, or storage-denial manual testing is claimed by this closeout.
 
 ## Structure and persistence
 
 - `src/app`: application shell, navigation, and shared service composition.
-- `src/features`: Focus, Tasks, History, Review, and Insights/Profile placeholders.
-- `src/domain`: domain contracts and pure timer, Task, and calendar logic.
+- `src/features`: Focus, Tasks, History, Review, Insights, and a Profile placeholder.
+- `src/domain`: domain contracts and pure timer, Task, calendar, and Insights queries.
 - `src/storage`: storage interface, defaults, localStorage adapter, and tests.
 - `src/styles`: CSS tokens and global styles.
 
@@ -212,6 +273,11 @@ Throttling, freezing, abrupt termination, and failed writes can leave stale
 checkpoints; conservative recovery may undercount legitimate running time by
 more than five seconds. v0.4 extends metadata in schema v4 without changing these
 recovery semantics or adding dependencies.
+
+v0.5 keeps schema v4 and its migrations/validation unchanged. Insights receives
+only storage load capability and derives all summaries in memory; it never
+reconciles timers, settles Reviews, or saves analytics. Existing successful-write
+composition refreshes the read snapshots. No new dependency is introduced.
 
 Runtime assets are served locally, with no external fonts or services. The app
 does not include a service worker or guarantee offline reload when its local

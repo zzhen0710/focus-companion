@@ -117,7 +117,7 @@ directions, not a frozen layout or a requirement to create every surface.
 
 During v0.3-v0.5, intentionally basic pages are acceptable for validating
 behavior and local application APIs. Do not over-polish temporary SaaS-style
-dashboards expected to be redesigned from v0.7 onward. The current v0.2
+dashboards expected to be redesigned from v0.7 onward. The existing
 navigation remains a valid foundation, not the final experience hierarchy.
 
 The following tools form lightweight functional layers around that scene.
@@ -145,8 +145,8 @@ implementation plan, not this direction document.
 
 History preserves focus and task outcomes. Daily Review revisits unresolved
 prior-day tasks, with outcomes such as complete, move/reschedule, or drop where
-appropriate. v0.4 owns this workflow; exact review and history models remain
-to be designed. Review should help the user decide what comes next without
+appropriate. v0.4 implemented this workflow, immutable outcome snapshots, and
+resumable Review. Review should help the user decide what comes next without
 becoming enterprise project management.
 
 ### Insights
@@ -198,18 +198,16 @@ representation. Exact service contracts and rendering details remain undecided.
 
 ## Approved Focus History Direction
 
-In the future Focus History / Insights stage, interrupted focus periods must be
-recorded rather than discarded. Actual focused time from both completed and
-interrupted periods must contribute to total focus time, and the two outcomes
-must remain distinguishable. Future Insights must be able to derive completed
-count, interrupted count, and completion rate from those records.
+v0.4 records completed and interrupted Focus periods as distinguishable outcomes.
+Explicit unfinished Focus Reset records interrupted time at one full trustworthy
+second or more; lifecycle/recovery does not create interruptions. v0.5 derives
+total actual focused time from both outcomes, counts each separately, and defines
+session completion rate as completed sessions divided by all recorded sessions
+(null when there are none). These are factual summaries, not productivity scores.
 
-These are approved future requirements, not implemented v0.2 behavior. v0.2
-records only naturally completed focus periods; resetting an unfinished period
-abandons it without a record. The interrupted-session model, the precise
-interruption rules, and the completion-rate calculation remain to be designed
-in v0.4 History & Daily Review Core and v0.5 Insights Core respectively. Do not
-introduce that model in v0.2.
+The historical v0.2 release recorded only naturally completed Focus periods;
+unfinished Reset abandoned the period without a record. Interrupted recording
+was introduced in v0.4, not retroactively added to earlier release behavior.
 
 ---
 
@@ -386,7 +384,7 @@ The first goal is to make the personal focus experience genuinely useful:
 Networking, accounts, synchronization, relationships with real companions,
 profiles, boards, and reactions belong to later stages. The local virtual
 companion follows the separate v0.6-v0.8 experience roadmap; neither direction
-is implemented in the current v0.2 foundation.
+is implemented in the current productivity core.
 
 ---
 

@@ -6,9 +6,10 @@ The project should grow through small, usable versions rather than large feature
 
 Each version should remain stable enough to use before moving to the next one.
 
-v0.1 through v0.4 are completed; v0.4 and its approved UX corrections passed
-manual acceptance. Sections from v0.5 onward are approved future scope, not
-completed features or authorization to implement them. Earlier scope sections
+v0.1 through v0.5 are completed; v0.5 Insights Core and its terminology
+clarification passed manual acceptance. Sections from v0.6 onward are approved
+future scope, not completed
+features or authorization to implement them. Earlier scope sections
 are retained as delivery references.
 
 ---
@@ -149,17 +150,23 @@ trends, and History date filtering remain v0.5; this closeout does not start it.
 
 Support useful reflection with restrained analytics presentation.
 
-### Planned scope
+### Delivered scope
 
-- daily/task/category aggregate focused time including actual time from completed and interrupted periods
+- daily/task aggregate focused time including actual time from completed and interrupted periods
 - useful History date filtering
 - completed/interrupted distinction, completed count, interrupted count, and completion rate
 - task completion and useful daily/weekly trends
-- task/focus relationships and category/time comparisons where justified
+- task/focus relationships; Category analytics deferred while Category remains compatibility data
 - derived statistics behind a local Insights application boundary
 - intentionally restrained analytics UI
 
-Define the exact completion-rate calculation in this stage. Chart forms should
+The v0.5 implementation uses completed sessions / all recorded Focus sessions,
+with null for an empty denominator. It includes Today / This week / Last 7 days
+queries, a fixed seven-day Focus trend, Task operation counts separate from
+current state, modest Review subsets, historical Task Focus groups, and basic
+History date filtering. Schema remains v4; no persisted totals or Task trend
+charts are added. Manual acceptance, including explicit Task-versus-Focus nouns,
+passed. Chart forms should
 serve reflection, not a mandatory large dashboard or gamification. v0.3-v0.5
 pages may be temporary/basic: validate behavior and APIs without spending
 excessive effort polishing SaaS-style pages expected to change from v0.7.
@@ -262,9 +269,9 @@ settings. v0.9 ends when the integrated experience is dependable for daily use.
 
 ## Future Experience Implementation Boundary
 
-These are approved directions, not implemented features. v0.1 and v0.2 remain
-completed foundations; this documentation update does not start v0.3 or change
-v0.2 timer behavior/schema. No premature companion components/domain models,
+These are approved directions, not implemented features. The productivity core
+has reached v0.5; this does not start the future experience stages or alter the
+existing timer recovery guarantees. No premature companion components/domain models,
 rendering choice, asset system, media storage fields, IndexedDB implementation,
 dependencies, future settings UI, backend, or social infrastructure.
 

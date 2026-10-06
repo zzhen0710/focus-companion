@@ -1,13 +1,11 @@
+import { useState } from 'react'
+import type { InsightPeriod } from '../../domain/calendarWindows'
+import { useInsights } from './useInsights'
+import InsightsView from './InsightsView'
+import { insightsService } from '../../app/services'
+
 export default function InsightsPage() {
-  return (
-    <section className="page" aria-labelledby="insights-heading">
-      <p className="eyebrow">Room for reflection</p>
-      <h1 id="insights-heading">Insights</h1>
-      <p className="page-intro">Understand where your attention goes.</p>
-      <div className="empty-state">
-        <h2>Your story starts with focused time</h2>
-        <p>Insights will become available after focus history is introduced. There are no statistics to display yet.</p>
-      </div>
-    </section>
-  )
+  const [period, setPeriod] = useState<InsightPeriod>('today')
+  const { summary, error } = useInsights(period)
+  return <InsightsView period={period} onPeriodChange={setPeriod} summary={summary} error={error} onRetry={insightsService.reload} />
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { groupHistory, historyEntries } from './history'
+import { filterHistory, groupHistory, historyEntries } from './history'
+import { localCalendarContext } from './calendarWindows'
 import { createDefaultData } from '../storage/storage'
 import type { TaskEvent } from './taskEvent'
 describe('immutable chronological History projection', () => {
@@ -25,5 +26,25 @@ describe('immutable chronological History projection', () => {
       startedAt: 0, endedAt: 2000 + index, durationSeconds: 1, plannedDurationSeconds: 2,
       outcome: outcome as 'completed' | 'interrupted', taskTitleSnapshot: null }))
     expect(historyEntries(data).map((entry) => entry.kind === 'focus' && entry.record.taskTitleSnapshot)).toEqual([null, null])
+  })
+})
+
+describe('read-only History date filters', () => {
+  it('preserves All time, chronology and details while selecting the approved periods', () => {
+    const data = createDefaultData(), now = new Date(2026, 9, 6, 12).getTime()
+    const ended = [new Date(2026, 8, 29, 12).getTime(), new Date(2026, 8, 30, 12).getTime(),
+      new Date(2026, 9, 5, 12).getTime(), new Date(2026, 9, 6, 0).getTime(), now + 1]
+    data.sessions = ended.map((endedAt, index) => ({ id: String(index), taskId: null, categoryId: null, startedAt: endedAt,
+      endedAt, durationSeconds: 0, plannedDurationSeconds: 0, outcome: 'completed', taskTitleSnapshot: null }))
+    const groups = groupHistory(historyEntries(data)), context = localCalendarContext(now), before = structuredClone(groups)
+    expect(filterHistory(groups, 'all', context)).toEqual(groups)
+    const ids = (period: 'today' | 'week' | 'last7days') => filterHistory(groups, period, context).flatMap((group) => group.entries.map((entry) => entry.id))
+    expect(ids('today')).toEqual(['3'])
+    expect(ids('week')).toEqual(['3', '2'])
+    expect(ids('last7days')).toEqual(['3', '2', '1'])
+    const empty = localCalendarContext(new Date(2026, 10, 1, 12).getTime())
+    expect(filterHistory(groups, 'today', empty)).toEqual([])
+    expect(groups).toEqual(before)
+    expect(filterHistory(groups, 'today', context)[0].entries[0]).toBe(groups[0].entries[1])
   })
 })

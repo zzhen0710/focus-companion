@@ -29,7 +29,7 @@ The application should remain fully usable without Internet access.
 
 The approved delivery direction is Web-first and local-first. Public Web
 deployment belongs to v0.9 and does not itself require a backend, accounts,
-cloud data, or social services. The current v0.4 app has no offline resource
+cloud data, or social services. The current v0.5 app has no offline resource
 cache; deployment, asset-loading, and offline delivery details remain work for
 their relevant stages, not infrastructure choices made by this document update.
 
@@ -292,8 +292,9 @@ prompts once; navigation, ticks, backgrounding, and date changes do not reprompt
 
 History is a read-only projection of FocusSessions, TaskEvents, and completed
 Reviews, ordered chronologically with deterministic ties and grouped by local
-date. It does not reconcile timers or write storage. Date filters and analytics
-remain v0.5 scope; this is not a general audit-log framework.
+date. It does not reconcile timers or write storage. v0.5 adds All time / Today /
+This week / Last 7 days filtering with transient selection; this is not a general
+audit-log framework.
 
 ---
 
@@ -597,7 +598,65 @@ The chart library should visualize data.
 
 It should not own business logic.
 
-The specific chart library does not need to be chosen before v0.5.
+v0.5 uses plain HTML/CSS daily rows and bars; no chart dependency is needed.
+
+## Implemented v0.5 read-only queries
+
+`calendarWindows.ts` defines only Today, Monday-based This week, and Last 7 days
+(today plus six preceding local dates). Pure queries receive a reference time
+and calendar context; upper dates are exclusive and facts after the reference
+instant are excluded. Calendar arithmetic uses date components, not fixed
+24-hour days. The current system zone maps timestamps to dates; a zone change
+regroups facts without modifying them. All time History preserves all records.
+
+`insights.ts` derives summaries from saved FocusSessions, current Tasks,
+TaskEvents, and completed Review records. Focus uses actual durationSeconds,
+including both outcomes and valid legacy zero-duration records. With C completed,
+I interrupted, N = C + I, and T = sum(durationSeconds), completion rate is C / N
+and average duration is T / N; both are null when N is zero. Live/unsaved timer
+time, breaks, planned duration, and endedAt - startedAt are not counted.
+Whole sessions belong to the endedAt local date, matching History; this is an
+attribution convention, not precise cross-day allocation.
+
+Task completions/drops/reschedules count events by occurredAt, including repeated
+real operations; Reopen never removes prior facts. Open/Overdue now are separate
+current-state counts, with overdue identical to Review eligibility. Review counts
+use completedAt; linked actions use their own occurredAt, including persisted
+actions in an active draft. Those actions are subsets of Task activity, not
+additional activity. Review cohorts and current terminal timestamps do not
+manufacture missing historical operations. Older versions have incomplete event
+coverage and are not backfilled.
+
+Task completions and Completed sessions / Interrupted sessions are intentionally
+different metrics. Manual Task completion creates only a TaskEvent; natural Focus
+completion creates a FocusSession without completing the Task. Completing a Task
+during Focus and then resetting unfinished Focus creates one Task completion and
+one eligible interrupted session, not a completed session or another Task event.
+Integration tests assert these boundaries. The trend heading is Focus · Last 7
+days; daily/per-Task outcome rows use explicit singular/plural session nouns.
+
+The seven-day trend has seven ascending, zero-filled dates and agrees with the
+same window's Focus total. Task Focus groups use taskId, including a separate
+No task group. Titles use the latest non-null Start capture within the queried
+window (startedAt descending, then session ID ascending); unknown legacy titles
+remain Unknown historical task. Current Task names/deletion never rewrite these
+labels. Groups sort by actual seconds descending, then Task ID ascending, with
+null last on ties.
+
+`insightsService` receives only load capability and exposes getSnapshot,
+subscribe, reload, and query(period). It neither saves nor invokes Timer/Review
+workflows. Existing successful-write composition refreshes its facts after Review
+settlement. Failed reads preserve the last loaded results with an error; an
+initial failed read returns no summary rather than fabricated zero metrics.
+History and Insights refresh on mount, visible focus/pageshow, visibility return,
+relevant storage events, and once per minute while visible. The minute check
+eventually updates date/zone context; throttling can delay it. These reads never
+participate in Timer correctness or change source data. Period selection is
+transient. Schema stays v4 with v1 -> v2 -> v3 -> v4 migration unchanged; no
+aggregates, caches, timezone metadata, or UI calculations are persisted.
+
+No Category analytics, generic engine, event bus, background aggregation,
+productivity judgment, recommendations, or Companion interpretation is introduced.
 
 ---
 

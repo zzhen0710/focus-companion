@@ -2,6 +2,90 @@
 
 本文件记录实际完成的版本变更，不将路线图中的计划功能视为已实现功能。
 
+## v0.5 — Insights Core — 2026-10-06
+
+### Added
+
+- Read-only Insights from saved FocusSessions, current Tasks, TaskEvents, and
+  completed Review records. Today, Monday-based This week, and Last 7 days are
+  the only exposed summary periods; Today is the default.
+- Focused actual time, completed/interrupted/session counts, completion rate
+  (completed / all sessions), and average actual duration. Empty rate/average
+  are null and display an em dash; valid zero-duration legacy sessions remain.
+  Breaks, live/unsaved timer time, planned duration, and start/end wall-clock
+  gaps are not counted as actual Focus.
+- Explicit nouns distinguish Task completions from Completed sessions and
+  Interrupted sessions. The trend heading is Focus · Last 7 days; daily and
+  per-Task Focus outcome rows use singular/plural session nouns. Review-linked
+  completions are labeled Task completions through Review. This clarification
+  changes no aggregation formula or business semantics.
+- Task operation counts for completions, moves/reschedules, and drops; repeated
+  real actions count separately. Current Open/Overdue appear in a separate Now
+  area, with overdue identical to Daily Review eligibility.
+- Completed Review count by completedAt and Review-linked operations by their
+  own occurredAt, including already saved actions in active drafts. Review
+  operations are subsets of Task activity, not additional activity.
+- A fixed seven-local-date Focus trend, ascending and zero-filled, with textual
+  time/outcome counts and simple CSS bars. Its total matches Last 7 days Focus.
+- Task Focus groups by Task ID, preserving historical Start title snapshots
+  after rename/deletion. Latest non-null capture within the window supplies the
+  label; missing titles remain Unknown historical task and unbound sessions
+  remain No task. Ordering is actual time descending with stable identity ties.
+- Basic History filtering: All time (default), Today, This week, Last 7 days.
+  Chronology/details remain intact; selected-period emptiness is distinguished
+  from having no history. Selections are transient and perform no writes.
+
+### Engineering and data safety
+
+- Explicit pure calendar and Insights queries, independent of React/storage,
+  receive reference time/calendar context. Windows use local date components,
+  not fixed 24-hour arithmetic, and exclude facts after the reference instant.
+- Whole FocusSessions belong to the endedAt local date, matching History;
+  cross-midnight sessions are not split. Current timezone changes regroup facts
+  without modifying stored timestamps or floating Task schedules.
+- Insights service receives load capability only. Existing successful-write
+  composition refreshes it; queries never recover timers, settle Reviews, or
+  mutate source collections. Failed reads expose errors, retaining previous
+  results with an explicit stale-result message rather than fake zero metrics.
+- Shared read-page lifecycle refreshes on visible return/focus/pageshow, relevant
+  storage events, and once per minute while visible for calendar-context changes.
+  These reads do not participate in Timer correctness.
+- Schema remains v4; v1 -> v2 -> v3 -> v4 migration and validation are unchanged.
+  No persisted totals/rates/trends/caches/timezone fields or new dependencies.
+  Timer recovery/checkpoints/retry/idempotency and Task/Review write behavior
+  remain unchanged. New UI/documentation copy is English; old release entries
+  are preserved without language normalization.
+
+### Verification
+
+- Typecheck, lint, all 258 automated tests across 22 files, production build,
+  and git diff --check passed. Coverage includes metrics, local-calendar/DST
+  boundaries, History filters, read-only failures, and Task/Focus/Review write
+  refresh integration, retaining the existing v0.2-v0.4 regression suite.
+- Regression tests explicitly distinguish manual Task completion, natural Focus
+  completion, and Task completion followed by eligible unfinished Focus Reset:
+  no cross-domain completion or duplicate Task event is introduced.
+- The user confirmed manual v0.5 acceptance, including terminology clarification.
+  Final closeout changes only documentation and repeats automated verification;
+  it adds no runtime feature or new browser/real sleep-wake manual test claim.
+- Vitest/Vite required execution outside the Windows sandbox after esbuild
+  configuration reads were denied inside it. No dependencies were installed.
+
+### Limitations and intentionally deferred work
+
+- Historical TaskEvent coverage starts at v0.4; absent older events cannot
+  truthfully be reconstructed from current Task state. Event counts are operation
+  counts, not unique Task counts. Completion rate is not a productivity score.
+- Ending-date attribution is not exact per-day focused-time allocation. Current
+  zone/clock changes affect calendar grouping; background throttling can delay
+  read refresh. Existing single-controlling-tab/storage/lifecycle limits remain.
+- UI remains a restrained validation interface; final scene/presentation work
+  belongs to later stages. Existing browser lifecycle limitations remain.
+- No Category analytics, Task trend charts, advanced filters/search/export,
+  Priority/Closed/drag UI, persisted aggregates, analytics framework, Companion
+  interpretation, scoring, recommendations, AI, final art/audio/media, accounts,
+  backend, sync, social features, or v0.6 work.
+
 ## v0.4 — History & Daily Review Core（历史与每日回顾核心）— 2026-10-06
 
 ### 实际新增

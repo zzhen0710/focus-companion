@@ -3,6 +3,7 @@ import { createTimerController } from '../features/focus/timerController'
 import { createTaskService } from '../features/tasks/taskService'
 import { createReviewService } from '../features/review/reviewService'
 import { createHistoryService } from '../features/history/historyService'
+import { createInsightsService } from '../features/insights/insightsService'
 import type { AppStorage } from '../storage/storage'
 
 const adapter = createLocalStorageAdapter()
@@ -17,12 +18,13 @@ export const timerController = createTimerController(storage)
 export const taskService = createTaskService(storage)
 export const reviewService = createReviewService(storage)
 export const historyService = createHistoryService(storage)
+export const insightsService = createInsightsService({ load: storage.load })
 
 let refreshing = false
 refresh = () => {
   if (refreshing) return
   refreshing = true
-  try { taskService.reload(); reviewService.reload(); historyService.reload() }
+  try { taskService.reload(); reviewService.reload(); historyService.reload(); insightsService.reload() }
   finally { refreshing = false }
 }
 
@@ -31,4 +33,5 @@ export function retryStorage() {
   taskService.reload()
   reviewService.reload()
   historyService.reload()
+  insightsService.reload()
 }

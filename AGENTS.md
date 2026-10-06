@@ -20,7 +20,7 @@ These documents are the project's source of truth.
 
 The project is currently in:
 
-**v0.4 — History & Daily Review Core (completed and manually accepted)**
+**v0.5 — Insights Core (completed and manually accepted)**
 
 Do not implement features from later versions unless the user explicitly changes the current scope.
 
@@ -42,8 +42,8 @@ Future requirements should influence clean boundaries, not current implementatio
 Here, friends/companions means social relationships with real people. The future
 local virtual companion is a separate experience capability, planned for v0.7;
 do not implement it in the productivity-core stages. v0.2 is completed;
-v0.3 and v0.4 are completed and accepted. Do not start
-v0.5 without explicit approval.
+v0.3 through v0.5 are completed and accepted. v0.5 provides the read-only
+aggregation layer. Do not start v0.6 without explicit approval.
 
 Tasks use floating local calendar schedules and persistent array order. Completed
 tasks remain editable; preserve lifecycle facts through the limited TaskEvents,
@@ -60,9 +60,21 @@ Tasks have strict open/completed/dropped transitions; Reopen before changing
 between terminal outcomes. TaskEvents and Focus title snapshots are immutable.
 Review is a dismissible soft gate with a persisted cohort; count only real linked
 actions and cancel empty untouched drafts. Schema v4 migrates legacy facts without
-fabricating events or titles. Insights/totals/filtering remain v0.5.
+fabricating events or titles. v0.5 derives Insights and filters History without
+changing schema v4 or any write-side workflow. Insights receives load capability
+only. Use explicit reference time/calendar context, Monday weeks, and seven local
+dates including today. Focus totals use stored actual duration and endedAt day
+attribution; never count a live timer or fabricate missing historical Task events.
+Task activity counts operations, separate from Open/Overdue now; Review-linked
+actions are subsets, attributed by their own timestamps. Group Task Focus by ID
+and historical title captures, never current titles. Empty session rate/average
+are null. No Category analytics, persisted aggregates, or Companion interpretation.
+Keep Task completions distinct from Completed sessions / Interrupted sessions.
+Manual Task completion creates no FocusSession; natural Focus completion does
+not complete the Task. Unfinished Focus Reset does not create a Task completion.
 
-Product UI copy is English. Same-title creation warnings compare only trimmed,
+New product and documentation copy is English; preserve historical release text.
+Same-title creation warnings compare only trimmed,
 case-sensitive titles of open Tasks, and permit Create Anyway; Back preserves
 the draft. Feedback is provisional until the later Quiet Feedback Language work.
 Task View/Status default to All dates / Open and persist separately under

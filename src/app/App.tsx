@@ -56,7 +56,7 @@ export default function App() {
           <p className="brand">Focus Companion</p>
           <p className="brand-note">Built for accountability, not attention.</p>
         </div>
-        <span className="version-label">v0.4 · History & Daily Review</span>
+        <span className="version-label">v0.5 · Insights Core</span>
       </header>
       <nav className="primary-nav" aria-label="Main navigation">
         {areas.map(({ path, label }) => (
