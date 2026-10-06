@@ -223,10 +223,14 @@ Make the companion the primary visual subject in one polished default main scene
 
 ### Planned scope
 
-- prioritize one high-quality default companion and one high-quality default environment
+- one polished default human anime-inspired Companion in a warm nighttime study room
+- sleeping cat as a secondary scene element; practical static drink steam and lighting
 - Companion is persistent and the unique dominant focal subject
 - integrate the production Main Scene, Global UI Handle, and utility launchers
-- integrate existing Focus / Tasks / Review / History / Insights through one active panel
+- exactly five production launchers: Focus / Tasks / Review / History / Insights
+- integrate existing tools through at most one bounded primary functional card
+- zero to two lightweight subordinate auxiliary bubbles; hard cap, not target occupancy
+- one default readable CSS glass material with opaque fallback
 - connect factual context to a small deterministic Companion expression set
 - retain route compatibility where useful without replacing the scene on tool changes
 - use drawers, overlays, compact cards, side panels, or contextual controls where useful
@@ -237,6 +241,15 @@ non-destructive drafts and never implies business actions. Review should normall
 be opened intentionally from a quiet pending indication. Critical failures remain
 discoverable even in immersive mode. Optional Priority and drag/reorder work are
 not prerequisites for this release and require separate scoped approval.
+
+Collapse hides the primary card, auxiliaries, and launchers. Immersive contains
+only scene, Companion, and a tiny stationary upper-right/top-edge handle; no
+personalized messages remain visible. Reveal never reopens the previous panel.
+Use roughly two to three authored shared launcher-layout families with stable
+DOM/keyboard order and restrained CSS transitions, not physics or layout engines.
+The bounded UI and expression contracts are in
+[Experience Contracts](docs/experience-contracts.md).
+Music, Ambience, Settings, Journal, More, and Knowledge are not v0.7 launchers.
 
 Prefer one persistent scene over frequent navigation between themed rooms.
 Productivity UI should generally be visually subordinate to the companion and
@@ -263,6 +276,7 @@ of the product; high customizability must not make the default complex.
 - optional/reducible animation and sound
 - media/resource reliability, persistence, invalid-media handling, storage limits, and recovery
 - related experience/media preferences, without forcing all preferences into business data
+- configurable glass/visual presets, richer personalization, and a broader expression catalogue
 
 Music, ambience, day/night behavior, richer backgrounds, skins, and deeper
 personalization belong primarily here, not in the v0.6 prototype. Exact skin
@@ -279,6 +293,19 @@ stage; this refinement does not remove the previously approved delivery deadline
 Formats, limits, playback details, sound assets, UI placement, and media-storage
 technology remain undecided. Custom completion sounds may be considered later,
 but are not committed scope. Avoid attention-seeking audio or unnecessary sound features.
+
+The v0.7 default glass and practical static atmosphere do not authorize bringing
+v0.8 music/media systems, day/night behavior, or appearance settings into v0.7.
+
+### Separately deferred Knowledge
+
+Knowledge is not v0.7 scope, not required for v0.8, and not promised for v1.0.
+Later separate approval may cover notes, saved learning material, project
+references, local collections, searchable personal/project information, or a
+future context source. Final UX and implementation are undecided. No launcher,
+schema, indexing/search infrastructure, RAG, embeddings, vector storage, LLM,
+or Agent is authorized now. Knowledge can be local/static without AI; later
+separately approved AI may consume it without owning the capability.
 
 ---
 

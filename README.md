@@ -8,13 +8,13 @@ focus scene and quiet virtual companion are future experience stages; they are
 not implemented in v0.5. The current pages are a foundation for validating the
 productivity core. See PRODUCT.md and ROADMAP.md for the revised staging.
 
-v0.1-v0.5 are completed. Pre-v0.6 documentation consolidation archives the next
-bridge stage, Experience Contracts & Art Direction; v0.6 is not implemented.
+v0.1-v0.5 are completed. v0.6 Experience Contracts & Art Direction adds tested
+read-only contracts and an isolated fixture prototype; browser acceptance is pending.
 See [Experience Contracts](docs/experience-contracts.md) and
 [Art Direction](docs/art-direction.md) for approved future boundaries. Production
 Main Scene integration remains v0.7, with atmosphere/personalization in v0.8.
 
-## Current scope: v0.5 — Insights Core
+## Production scope: v0.5 — Insights Core
 
 A local, single-user React + TypeScript + Vite application with a responsive
 shell, hash navigation for Focus / Tasks / History / Insights / Profile, a light visual
@@ -190,6 +190,40 @@ Open the local URL printed by Vite (normally http://localhost:5173).
 On Windows PowerShell, if execution policy blocks `npm.ps1`, use `npm.cmd ci`
 and `npm.cmd run dev` instead. No execution-policy change is required.
 
+## Isolated v0.6 Main Scene prototype
+
+With `npm run dev` running, open
+`http://localhost:5173/prototypes/main-scene/` (use Vite's printed port).
+Append `?lab=1` for in-memory scenarios, completion candidates, failed reads,
+recovery, and reference-time advancement. The normal `/` entry remains the
+production application. No config or package-script change is required.
+
+The separate entry renders one original layered SVG human companion in a daylight study room,
+a Show/Hide controls handle, six lightweight launchers, and one fixture panel.
+Task draft text survives switching/collapse in memory; destructive confirmation
+does not. These panels are interaction/composition samples, not working tools.
+Settings is a placeholder. No fixture, draft, reaction, or utility state is saved.
+The normal production build excludes this entry and artwork.
+The six launchers, rectangular handle, grid, daylight SVG, and card dimensions
+describe this prototype only. The approved future production direction in
+[Art Direction](docs/art-direction.md) and [Experience Contracts](docs/experience-contracts.md)
+supersedes those choices; v0.7 is not implemented.
+
+Pure contracts in `src/experience` distinguish live/pending timer state, committed
+facts, selected/captured/current/historical Task identity, and data availability.
+The thin read-only coordinator separates live ticks from saved aggregation.
+Deterministic rules produce semantic presence, optional acknowledgment, and
+optional Review cue without business commands or psychological inference.
+Production integration remains v0.7; schema v4 and all business behavior remain
+unchanged. See [Experience Contracts](docs/experience-contracts.md) and
+[prototype acceptance steps](docs/art-direction.md#browser-acceptance-checklist).
+
+v0.6 automated verification passes 324 tests across 27 files, typecheck, lint,
+and production build. Both development entries serve successfully. No enabled
+browser-control surface was available during implementation, so visual hierarchy,
+real keyboard/focus behavior, responsive/zoom/reduced-motion rendering, browser
+storage before/after, and console acceptance are not claimed as verified.
+
 ## Verification
 
 ```sh
@@ -240,6 +274,8 @@ real sleep/wake, or storage-denial manual testing is claimed by this closeout.
 - `src/domain`: domain contracts and pure timer, Task, calendar, and Insights queries.
 - `src/storage`: storage interface, defaults, localStorage adapter, and tests.
 - `src/styles`: CSS tokens and global styles.
+- `src/experience`: pure read-only context, utility states, rules, and tests; not wired into production.
+- `src/prototypes/main-scene` and `prototypes/main-scene`: isolated development prototype.
 
 The adapter uses the localStorage key `focus-companion:data` with
 `schemaVersion: 4`, task/category/session/event/review collections, settings,

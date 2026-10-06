@@ -123,11 +123,18 @@ the persistent visual experience; a minimal Global UI Handle remains available
 to reveal controls. Utilities can retreat without requiring literally zero UI
 pixels. Opening a panel must leave the Companion visually meaningful.
 
-The future handle is a quiet, small, long flat rectangle near the top edge,
-preferably upper-right. Vertical chevrons mean Show controls (`⌄`) and Hide
-controls (`⌃`); the interaction target must remain comfortably accessible.
-Immersive, utility-ready, and active-panel states permit at most one major panel.
-Reveal normally shows launchers only; collapse hides the panel and launchers.
+The future handle is one tiny, stationary, quiet upper-right/top-edge entry
+with a comfortably larger hit target, native button semantics, visible keyboard
+focus, and vertical Show controls / Hide controls meaning. Its exact mark is
+open; a rectangle, literal wind chime, dragging, or swinging is not required.
+Persistent errors may give it a subtle attention state.
+v0.7 has exactly five launchers: Focus, Tasks, Review, History, Insights.
+The discriminated immersive / utilityReady / activePanel(tool) state permits
+at most one primary functional card and zero to two subordinate auxiliary
+bubbles. This is a hard upper bound, not a target occupancy. Narrow screens
+normally suppress auxiliaries first. Reveal normally shows launchers only;
+collapse hides the card, auxiliaries, and launchers. Immersive contains only the
+scene, Companion, and handle; messages do not persist there in v0.7.
 Selecting another tool replaces the panel; selecting the active tool may close
 it. Reopening controls does not automatically restore the previous panel.
 
@@ -209,6 +216,17 @@ or reducible and must support focus rather than demand attention.
 Existing cozy focus/companion products are category references only. Do not
 copy their specific art, characters, rooms, music, animation, or UI.
 
+The approved production direction is a human anime-inspired Companion as the
+strongest intentional focal subject in a warm nighttime study room, with a
+sleeping cat as secondary companionship. Use lavender/mauve with cream/amber
+light, cool moonlight blue, and restrained natural green, not monochrome purple.
+Thin visible drink steam and restrained peripheral haze support the atmosphere.
+Protect the face, hands/meaningful pose, cat, and important desk activity from
+UI obstruction and blur. Concept art is a visual north star, not an exact
+character, outfit, density, timer ring, coordinate, typography, skyline, or copy
+specification. [Art Direction](docs/art-direction.md) preserves the visual and
+layering contracts without choosing a final rendering engine.
+
 Art direction begins in v0.6; the main companion scene belongs to v0.7 and richer
 atmosphere/personalization to v0.8. Do not choose 2D, Live2D-like, 3D, or another
 rendering approach yet. Do not create speculative asset systems or companion
@@ -249,6 +267,17 @@ Focus-time interruption avoidance, and suppression during user decisions.
 Opening the app must not replay historical events; missed reactions must not
 form a backlog, and ticks/checkpoints/reloads must not repeatedly trigger cues.
 
+Future expression bubbles may pair a stable low-weight ambient message with a
+limited event-bound acknowledgment, within the auxiliary cap. Use deterministic
+approved vocabulary, semantic keys/tightly defined parameters, and factual
+context. Personalized means context-appropriate, not emotional inference.
+No expandable conversation, freeform chat, message history, LLM, or Agent is
+approved. Text remains selectable HTML; handwriting is only for short optional
+copy, never instructions, numbers, errors, buttons, or accessibility-critical
+content. Baseline initialization and stale/error recovery are silent; hidden
+optional reactions never replay later. Operational feedback takes priority.
+Functional-card visibility remains UI state, separate from expression intent.
+
 Quiet Feedback Language has four levels: Ambient cue (low weight, no action),
 Context hint (local, informative, non-blocking), Decision prompt (explicit local
 choice, not a disappearing toast), and Blocking error (an operation cannot
@@ -266,6 +295,17 @@ The separate Task View/Status preferences are a useful precedent. Avoid both
 ad hoc storage per component and a premature generic settings framework.
 Duplicate-warning suppression is only a possible preference pending separate
 approval. Settings is not implemented by this consolidation.
+
+### Deferred Knowledge Capability
+
+Knowledge requires a later separate capability approval: it is not v0.7 scope,
+not required for v0.8, and not promised for v1.0. Possible scope includes notes,
+saved learning material, project references, local collections, searchable
+personal/project information, and a future Companion/Agent context source.
+Final UX remains undecided. Do not introduce a launcher, schema, indexing,
+search infrastructure, RAG, embeddings, vector storage, LLM, or Agent now.
+Knowledge is conceptually independent from AI: local/static Knowledge may exist
+without an LLM; separately approved future AI may consume it as one context source.
 
 ---
 

@@ -158,9 +158,10 @@ domain types into the productivity core or speculative asset infrastructure.
 Rendering technology (2D, Live2D-like, 3D, or another approach), media-storage
 technology, exact service contracts, and experience mappings remain undecided.
 
-### Approved pre-v0.6 experience boundary (not implemented)
+### v0.6 isolated experience boundary
 
-The completed v0.1-v0.5 core supports the following future read-side direction:
+The completed v0.1-v0.5 production core remains unchanged. v0.6 validates the
+following read-side direction with pure contracts and in-memory fixtures:
 
 ```text
 Persisted Facts -> Read-only Insights -> Experience Context
@@ -190,9 +191,29 @@ context reads and visual expression do not execute workflow mutations. No LLM /
 AI Agent is planned before v1.0; later AI needs separate approval.
 
 Detailed contracts are in [Experience Contracts](docs/experience-contracts.md).
-This direction does not introduce code, schema fields, persisted aggregates,
-reaction-history records, a repository framework, or an event bus. v0.6 planning
-should stabilize only the actual boundaries required by its small prototype.
+`src/experience/context.ts` reuses existing timer calculations, Focus summary,
+calendar, and Review eligibility helpers. The curated view separates live and
+pending state from committed facts, selected/captured/current/historical Task
+identity, and loading/ready/stale/unavailable data. `contextStore.ts` accepts a
+read-only loader and injected clock, publishes live updates cheaply, and rebuilds
+saved projections only on explicit refresh or local-date rollover. Failed reads
+retain marked stale facts or report unavailable, never fabricate zero activity.
+
+`utilityState.ts` owns the immersive / utilityReady / activePanel(tool) union.
+`rules.ts` returns semantic intent with in-memory baseline/deduplication,
+suppression, expiry, cooldown, Focus-over-Task arbitration, and no backlog.
+Intent contains no rendering instructions. Prototype constants are documented
+in Experience Contracts; they are not final production policy.
+
+`prototypes/main-scene/index.html` loads a separate React root and stylesheet in
+`src/prototypes/main-scene`. Rendering receives curated context/intents and local
+presentation callbacks, not raw documents or business services. Fixtures alone
+compose the coordinator/rules. The prototype reuses `attachReadRefresh` only as
+an event binding with cleanup; it does not compose production services or storage.
+Its loader, Retry, and completion controls affect memory only. There are no
+schema fields, persisted aggregates/reaction memory, framework, or event bus.
+Normal Vite production input and existing bootstrap remain unchanged; production
+Main Scene integration is v0.7. Real browser acceptance remains pending.
 
 ---
 
@@ -734,20 +755,47 @@ and one polished default environment. Profile/social features remain later scope
 
 One persistent App Shell / Main Scene does not mean one giant React component.
 The conceptual children are EnvironmentLayer, CompanionLayer, GlobalUiHandle,
-UtilityLaunchers, and one ActivePanel. These components do not exist in v0.5.
+UtilityLaunchers, at most one primary functional card, and zero to two lightweight
+auxiliary bubbles. This is a hard cap, not a target; these production roles do not
+exist in v0.5. v0.7 has exactly Focus, Tasks, Review, History, Insights launchers.
 Application services and timer lifecycle must survive panel mounting changes.
 Routing may remain for compatibility, tests, development, and deep links; the
-future route adapter must not replace the scene or duplicate panel-state ownership.
+future single navigation-to-UtilityState adapter must not replace the scene,
+recreate independent dashboard pages, or duplicate panel-state ownership.
 Exact hash/history behavior awaits implementation planning.
 
 Immersive / utility-ready / active-panel state controls presentation only.
-Collapse hides the panel and launchers; reveal normally restores launchers only.
+Use a discriminated state, not unrelated visibility booleans. Collapse hides
+the primary card, auxiliaries, and launchers; reveal restores launchers only,
+never the old panel. Immersive has only scene, Companion, and the tiny handle.
+No personalized messages remain visible in immersive v0.7.
 Non-destructive drafts generally survive temporary hiding/switching in memory,
 without autosave. Destructive confirmations require renewed intent after hiding.
 Review's durable cohort remains separate from panel visibility. No presentation
 transition may imply Task submission, Review resolution, Focus Pause/Reset, or
 confirmation. Detailed interaction and error contracts are in
 [Experience Contracts](docs/experience-contracts.md).
+
+Future functional-card visibility is UI state; deterministic expression bubbles
+remain Rules/Expression Intent concerns. Compact factual auxiliaries project
+existing facts read-only; operational errors/recovery/decisions remain locally
+anchored functional truth and outrank optional content. Do not merge these into
+a generic notification system. Consider renaming rule output `primary` to
+`primaryReaction` in production only if useful; no current rename or extra
+channels are approved without an independently managed lifetime need.
+
+Start with roughly two to three CSS-authored shared layouts, stable DOM/keyboard
+order, transforms/opacity, and protected art regions. No collision solver,
+physics, dragging, or generic layout engine. Defer per-scene metadata until a
+second real scene demonstrates need. Default glass uses CSS with a readable
+opaque fallback, never whole-content opacity; optional peripheral effects must
+not blur the app root, Companion face, or functional text. Selectable HTML owns
+UI/message text. Conceptual art layers and open rendering choices are preserved
+in [Art Direction](docs/art-direction.md), not a speculative asset architecture.
+
+Future Knowledge is independent from LLM/Agent capability and requires separate
+approval under PRODUCT/ROADMAP. No Knowledge schema, indexing/search, RAG,
+embeddings, vector storage, or AI infrastructure is introduced by this boundary.
 
 Future Settings distinguishes business settings, UI preferences, experience
 preferences, and media preferences. Preserve the existing Task View/Status key;
@@ -780,7 +828,8 @@ These are migration concerns, not current authorization to rewrite the core:
 - Task move() swaps adjacent items in the whole array. Future priority-group
   movement and insertion rules cannot simply reuse that presentation unchanged.
 
-v0.6 should produce contracts, a migration checklist, and an isolated prototype;
+v0.6 provides contracts and an isolated prototype; this section remains the
+production-integration migration checklist, not a schema migration;
 production shell/routing/Review/error integration is v0.7 work after approval.
 
 ---
