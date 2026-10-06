@@ -95,7 +95,7 @@ export function createPrototypeRuntime(clock: () => number = Date.now) {
     const error = state.saved.status === 'stale' || state.saved.status === 'unavailable' ||
       state.focus.status === 'unavailable' || (state.focus.status === 'ready' && !!state.focus.value.error)
     const result = evaluateExperience(state, { ...attention, blockingError: error }, memory)
-    if (result.intent.primary && result.intent.primary.factId !== memory.primary?.factId) reactionCount++
+    if (result.intent.primaryReaction && result.intent.primaryReaction.factId !== memory.primaryReaction?.factId) reactionCount++
     memory = result.nextMemory
     return { context: state, intent: result.intent, reactionCount }
   }

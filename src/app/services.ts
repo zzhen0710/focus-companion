@@ -5,6 +5,7 @@ import { createReviewService } from '../features/review/reviewService'
 import { createHistoryService } from '../features/history/historyService'
 import { createInsightsService } from '../features/insights/insightsService'
 import type { AppStorage } from '../storage/storage'
+import type { FactsLoad } from '../experience/contextStore'
 
 const adapter = createLocalStorageAdapter()
 let refresh: () => void = () => {}
@@ -19,6 +20,14 @@ export const taskService = createTaskService(storage)
 export const reviewService = createReviewService(storage)
 export const historyService = createHistoryService(storage)
 export const insightsService = createInsightsService({ load: storage.load })
+
+/** Load-only projection input; never performs Review settlement or timer recovery. */
+export function loadExperienceFacts(): FactsLoad {
+  const result = adapter.load()
+  if (result.status !== 'ready' || result.needsMigration) return { status: 'unavailable', error: 'Saved facts could not be loaded. Retry when ready.' }
+  const { tasks, sessions, taskEvents, activeReview } = result.data
+  return { status: 'ready', facts: { tasks, sessions, taskEvents, activeReview } }
+}
 
 let refreshing = false
 refresh = () => {

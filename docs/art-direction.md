@@ -1,8 +1,9 @@
 # Approved Art Direction and Prototype Boundary
 
-Status: isolated v0.6 composition/interaction prototype implemented; browser
-acceptance pending. The production v0.5 app has no Companion. Production
-integration belongs to v0.7 and requires separate approval.
+Status: v0.7 Checkpoints A-E are production-integrated with temporary structural
+scene artwork. Corrected structure passed user visual review; baseline UI motion
+is implemented with motion browser acceptance still pending. Final art/polish remain pending.
+v0.7 is not complete. The isolated v0.6 prototype remains a fixture study.
 
 ## Composition
 
@@ -16,11 +17,11 @@ practical; a panel must not visually replace the Companion. Avoid permanent
 large panels surrounding a small decorative character or competing analytics
 cards. Dense content must still be readable and usable on narrow screens.
 
-The top-edge, preferably upper-right, Global UI Handle remains visually minor:
-a tiny stationary, quiet scene-integrated mark with vertical reveal/collapse
-meaning and a larger accessible
-interaction target. Follow [Experience Contracts](experience-contracts.md) for
-immersive / utility-ready / active-panel behavior and dismissibility.
+The right-edge Tool Drawer has a tiny stationary circular/soft mark with a larger
+usable native-button target. Left reveals tools; right hides them toward the
+edge. Five circular launchers remain fixed. BubbleWorkspace changes slot
+assignment, never launcher layout or scene framing. CompanionMessageStrip is a
+separate narrow bottom element with its own collapse control.
 
 ## Approved post-v0.6 production visual direction
 
@@ -113,12 +114,13 @@ large asset pipeline in this stage.
 
 v0.7 delivers one polished default nighttime study scene and human Companion,
 a secondary sleeping cat, practical static steam/lighting, production Main Scene,
-and a tiny stationary global handle. Exactly five launchers (Focus, Tasks, Review,
-History, Insights) integrate existing tools with at most one primary functional
-card and zero to two lightweight auxiliary bubbles. The count is a hard cap, not
-a target. Include a small deterministic expression set, one default readable
-glass material, and route compatibility. Collapse hides cards/bubbles/launchers;
-immersive has only scene, Companion, and handle. Priority/drag are not prerequisites.
+and a tiny stationary right-edge horizontal Handle. Exactly five launchers
+(Focus, Tasks, Review, History, Insights) remain fixed. The three-slot functional
+workspace has one richer Primary above two intentional Compact tool views;
+expression belongs to the independent bottom MessageStrip, outside that budget.
+No functional bubble relies on internal vertical scrolling. Use focused subviews
+and pagination, not miniature pages. Slot dragging snaps to authored positions,
+with accessible Arrange/Promote alternatives. No final-art acceptance is claimed.
 
 v0.8 primarily adds music/ambience, completion sound/mute/volume, richer behavior,
 day/night treatment, local image/video backgrounds, controlled appearance,
@@ -133,14 +135,15 @@ later than v0.9. Customization supports focus rather than becoming the focus.
 | Prototype choice | Approved future production contract |
 | --- | --- |
 | Six launchers including Settings placeholder | Exactly Focus, Tasks, Review, History, Insights in v0.7 |
-| Fixed three-column launcher grid | Roughly two to three shared authored state-specific layouts |
-| Rectangular Global UI Handle | Tiny stationary edge-adjacent mark; exact ornament open |
+| Fixed three-column launcher grid | Stable circular launcher rail; tool-independent positions |
+| Rectangular/vertical Global UI Handle | Tiny stationary right-edge mark; horizontal left/right semantics |
 | Daylight/vector study scene | Warm nighttime anime-inspired human Companion with secondary sleeping cat |
 | Current card dimensions | Bounded overlays validated for production art/content/viewports; no fixed inherited dimensions |
 
-Keep bounded scrolling, prototype isolation, factual-context availability,
+Production internal scrolling is superseded by focused no-scroll views. Preserve
+prototype isolation, factual-context availability,
 read/write service separation, draft retention, destructive confirmation clearing,
-conservative timer behavior, and one-primary-card discipline. Historical prototype
+conservative timer behavior, one Primary and at most two functional Aux slots. Historical prototype
 details below describe actual delivered code, not requirements to reproduce it.
 Knowledge is not a v0.7 launcher or required v0.8 capability; PRODUCT/ROADMAP
 preserve its separate deferred approval, independent from LLM/Agent decisions.
@@ -193,16 +196,16 @@ Scrollable card content is a labelled, keyboard-focusable region, so users can
 reach it and scroll long content without moving the scene. Existing handle,
 draft, confirmation, one-panel, Review and error semantics remain unchanged.
 
-## Browser acceptance checklist
+## Isolated prototype browser acceptance checklist
 
 Run `npm run dev` (`npm.cmd run dev` if PowerShell blocks npm.ps1). Use Vite's
-printed port for `/` (unchanged production) and `/prototypes/main-scene/?lab=1`.
-The development server and both entries were verified by HTTP; typecheck/lint,
+printed port for `/` (production Main Scene) and `/prototypes/main-scene/?lab=1`.
+During v0.6, the development server and both entries were verified by HTTP; typecheck/lint,
 324 tests across 27 files, and normal production build passed. The available
 browser-control inventory was empty, so the following browser checks are pending,
 including console/storage observation. They are not reported as performed.
 
-1. Open `/`, confirm the familiar production navigation/tools still work; stop
+1. Open `/`, confirm the production Scene and business tools work; stop
    any production timer before measuring prototype storage isolation.
 2. Open the prototype without `?lab=1` to judge composition without lab UI.
    Reveal: launchers only. Open Focus, switch to Insights, toggle Insights again:
@@ -245,7 +248,102 @@ including console/storage observation. They are not reported as performed.
 The lab sits below the scene, separate from its composition. Scenarios/events,
 drafts, selection, reference-time offset and rule memory are in-memory only and
 reset on reload. Timer fixtures use existing calculations but do not execute a
-working timer controller or save sessions. No production integration, Priority,
+working timer controller or save sessions. This isolated prototype delivers no production integration, Priority,
 drag/reorder, Settings implementation, audio/media, personalization, or schema
 work is delivered here. The normal production build excludes the prototype HTML
-and artwork; production source/config/package/lock files remain unchanged.
+and artwork. Its v0.6 implementation left production source/config/package/lock
+unchanged; the separate v0.7 integration now changes production presentation.
+
+## Production-art export handoff
+
+The current production SceneArtwork.tsx is deliberately simple SVG geometry in
+an authored 1600 x 1000 structural canvas. It verifies ordering, registration and
+responsive anchoring, not final anime illustration quality. The chosen concept
+remains a north star, with no exact character/outfit/coordinates copied.
+
+For final art, recommend a common 2560 x 1440 master with crop allowance. Re-register
+all layers together when replacing the structural canvas; do not stretch partial
+exports independently. Keep full master coordinates or supply each tight export's
+bounds/offset on that master. A still reference composite must demonstrate desk,
+hands/pen/book contact and all four facial overlays. Art source/provenance should
+be retained outside the runtime export set; large editable sources need not enter
+Git. Optimized local exports enter src/scene/assets/night-study/ at the next gate.
+
+| Required export | Format / alpha | Approximate bounds | Registration / variants / crop |
+| --- | --- | --- | --- |
+| Room + distant window + background light | Opaque WebP | Full 2560 x 1440 master, with overscan if needed | One night scene; crop-safe subject/UI background, moon/reflections outside important text |
+| Rear furniture | Transparent WebP/PNG, or merge into room | Master-aligned useful bounds | Static; remains behind body, may crop at edges |
+| Companion body/torso/hair | Transparent WebP/PNG | About 1100 x 1200, relative to master | Static contact-preserving pose; protect head/face, no different registration per state |
+| Desk + contact props | Transparent WebP/PNG | About 2560 x 600 lower region | In front of torso, below hand overlay; preserve pen/book/cup contact anchors; edges may crop |
+| Hands/contact overlay | Transparent WebP/PNG | About 800 x 400 tight region | Shared wrist/desk/prop anchors; no pose movement in this pass; do not crop meaningful contact |
+| Expression overlays: neutral, working, paused, break | Four transparent WebP/PNG exports | About 500 x 400 facial bounds each | Identical bounds/offset/eye anchors; unknown reuses neutral; acknowledgment needs no extra art; face stays crop-safe |
+| Sleeping cat | Transparent WebP/PNG | About 550 x 260 | One static pose registered to desk/contact plane, subordinate to human; no behavior system |
+| Drink steam/local-light treatment | Transparent SVG or WebP/PNG, may split only if necessary | About 250 x 400 steam bounds plus local light mask | Thin cup-anchored static treatment; no rich atmosphere engine |
+| Peripheral depth/vignette guide | Optional transparent WebP/PNG or CSS mask | Full master edge regions only | No alpha/blur over face/text/hands/cat; can remain authored CSS without an image export |
+
+These are approximate sizing recommendations, not locked design coordinates.
+Room/light/rear furniture may be one export when static composition preserves
+occlusion. All character/contact overlays require transparent backgrounds.
+Prefer cropped alpha exports over many full-canvas layers. Aim initially around
+3 MB compressed scene assets, then measure decoded memory and browser load/jank.
+Preload the room/neutral subject; load and decode alternate expressions before
+swapping. No pipeline, registry, LFS, remote asset service or engine is introduced.
+
+## Corrected production presentation and acceptance boundary
+
+The previous scrolling Primary card plus expression Aux interpretation is
+superseded. Production has a stable circular right-edge launcher rail, three
+functional slots, explicit Primary/Compact densities, and an independent current
+message strip. Primary is relatively wide and horizontal above two lighter Aux
+surfaces. The workspace aims at about 30% desktop width and 60% height; these
+are composition targets, not a clipping mechanism. Actual geometry needs browser
+review against final art. Controls use circles, pills and large radii.
+
+The temporary SVG artwork is unchanged. Artwork/face/contact/cat protection,
+registered exports and final-art requirements above remain valid. No final art
+was generated/imported. Final production-art integration remains a separate gate.
+
+Current CSS hides Aux and optional messages at width <=760px or height <=700px,
+retains slot state in memory and exposes a Primary selector for hidden open tools.
+Drag grips are hidden there; keyboard/explicit Arrange remains available. Compact
+views remove secondary controls rather than shrinking full pages. No functional
+bubble defines overflow-y auto/scroll; long content is paginated/subdivided.
+Native text editing can scroll its user-entered text, not a feature-page container.
+
+The corrected structure passed user visual review before the motion pass.
+Motion acceptance still required: right-edge reveal/hide; stable named
+launchers; open-order/oldest-Aux replacement; most-active promotion on close;
+three-slot balance; primary/compact distinctions; no internal functional scroll;
+Promote/Arrange/drag snap and cancel; independent message collapse; unchanged
+scene framing; drafts and confirmation clearing; Review Aux safety; Timer across
+movement; error recovery; 390px/320px/short landscape/200% zoom/reduced motion.
+Message Board/history/chat is deferred. No v0.7 visual release acceptance yet.
+
+## Baseline motion and resources
+
+The current production UI has shared 120/180/220ms tokens, gentle enter/exit/move
+easing, drawer/launcher reveal/hide, small hover/press/focus responses, bubble
+presence, tool-keyed FLIP, density crossfade, replacement sequencing, a lightweight
+pointer ghost/target highlight and independent message collapse/restore. Primary
+has more padding/material hierarchy; Compact stays reduced. Launchers are 48px.
+First Aux opens lower-right, next lower-left; no opening-side preference is saved.
+The workspace still aims around 30% desktop width and 60% height, without internal
+vertical scrolling. Reduced motion removes spatial/scale flourish. This is a base
+system, not final polish; retune durations/spacing against final art.
+
+Do not animate the temporary SVG Companion/cat/room. Dedicated production assets
+may later support blink, breathing, hair/writing hands, cat/steam/light/atmosphere.
+Room/window, Companion, cat, desk props, expressions, steam/glow and decoration
+belong to art assets. Cards/buttons/tabs/forms/selectors/pagination/drag targets,
+labels/dynamic text/progress remain HTML/CSS. Decorative textures/icons may be
+assets, but functional bubbles must not be baked images.
+
+Reserve a future independent Media Surface below the workspace, separate from
+MessageStrip and outside the functional slot budget. About 1.5 Aux widths is an
+approximate reference, not a fixed size. Height is not constrained below Aux;
+content/composition decides it. Later cover art/title/playback/progress and a
+lightweight real-data level/equalizer may occupy this surface. Respect scene
+budget. No visible placeholder, audio/visualization or final media artwork now.
+First music implementation should prefer imported local or app-provided audio/
+ambience; external-player control/scraping is deferred. Future desktop/Tauri OS
+media integration requires separate evaluation. Message Board remains deferred.

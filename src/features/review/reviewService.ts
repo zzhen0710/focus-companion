@@ -9,8 +9,8 @@ import { changeTask } from '../tasks/taskMutations'
 export type ReviewAction = { type: 'complete' | 'drop' } | { type: 'move'; schedule: TaskSchedule }
 export function createReviewService(storage: AppStorage, clock: () => number = Date.now,
   createId: () => string = () => crypto.randomUUID()) {
-  let snapshot: { data: AppData | null; error: string | null; visible: boolean; summary: ReviewRecord | null; today: string } =
-    { data: null, error: null, visible: false, summary: null, today: localCalendarDate(clock()) }
+  let snapshot: { data: AppData | null; error: string | null; summary: ReviewRecord | null; today: string } =
+    { data: null, error: null, summary: null, today: localCalendarDate(clock()) }
   const listeners = new Set<() => void>()
   function publish(data: AppData | null, error: string | null = null) {
     const previous = snapshot.data?.activeReview
@@ -58,7 +58,7 @@ export function createReviewService(storage: AppStorage, clock: () => number = D
       }
     }
     if (next !== data && !save(next)) return false
-    snapshot = { ...snapshot, visible: true, summary: next.activeReview ? null : snapshot.summary }
+    snapshot = { ...snapshot, summary: next.activeReview ? null : snapshot.summary }
     publish(next)
     return true
   }
@@ -69,11 +69,6 @@ export function createReviewService(storage: AppStorage, clock: () => number = D
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener) } },
     reload, open,
-    enter() {
-      reload()
-      if (snapshot.data?.tasks.some((task) => isReviewEligible(task, snapshot.today))) open()
-    },
-    dismiss() { snapshot = { ...snapshot, visible: false }; listeners.forEach((listener) => listener()) },
     resolve(reviewId: string, taskId: string, action: ReviewAction): boolean {
       const data = read()
       if (!data) return false

@@ -199,7 +199,8 @@ read-only loader and injected clock, publishes live updates cheaply, and rebuild
 saved projections only on explicit refresh or local-date rollover. Failed reads
 retain marked stale facts or report unavailable, never fabricate zero activity.
 
-`utilityState.ts` owns the immersive / utilityReady / activePanel(tool) union.
+`utilityState.ts` retains the isolated prototype immersive / utilityReady /
+activePanel(tool) union; production uses the three-slot workspace below.
 `rules.ts` returns semantic intent with in-memory baseline/deduplication,
 suppression, expiry, cooldown, Focus-over-Task arbitration, and no backlog.
 Intent contains no rendering instructions. Prototype constants are documented
@@ -213,7 +214,8 @@ an event binding with cleanup; it does not compose production services or storag
 Its loader, Retry, and completion controls affect memory only. There are no
 schema fields, persisted aggregates/reaction memory, framework, or event bus.
 Normal Vite production input and existing bootstrap remain unchanged; production
-Main Scene integration is v0.7. Real browser acceptance remains pending.
+Main Scene integration through v0.7 Checkpoint E is now production-wired as
+described below. Final artwork and real browser acceptance remain pending.
 
 ---
 
@@ -728,70 +730,69 @@ stored. Future All Active / finite Priority levels / Closed grouping, coarse
 priority plus fine manual order, icon controls, drag reordering, and scene Task
 surfaces remain design topics; no fields or infrastructure are introduced for them.
 
-The implemented v0.4 shell has hash navigation for:
+## Implemented v0.7 presentation ownership (Checkpoints A-E)
 
-```text
-Focus
-Tasks
-History
-Insights
-Profile
-```
+App owns the existing singleton services, useFocusTimer, Tasks/Review lifecycle,
+application read-refresh, navigation, Experience bridge and in-memory drafts.
+MainScene and SceneArtwork stay mounted. ToolDrawer owns stable right-edge
+horizontal Handle/launchers; BubbleWorkspace owns three authored functional slots;
+CompanionMessageStrip is separate expression presentation with independent
+visibility. Primary renders focused full controls; Aux uses explicit CompactTools,
+not scaled pages. Functional surfaces have no internal vertical scrolling.
+Exactly five tools remain; ProfilePage was removed after the shell switch.
 
-This shell is a valid temporary foundation, not the final visual hierarchy.
-v0.3-v0.5 may use intentionally basic pages to validate behavior and local APIs;
-avoid excessive polish for dashboard layouts expected to change from v0.7.
+workspace.ts owns expanded state, slot assignments and transient open/activity
+ordering. First tool fills Primary, next two fill Aux A/B. Fourth opening replaces
+the oldest opened Aux. Closing Primary promotes the most recently active Aux;
+promotion and pointer/accessible slot actions swap without business operations.
+No freeform geometry, generic window manager or persisted composition exists.
+Collapse clears slots; Reveal starts empty. Narrow/short layouts hide Aux and
+provide a selector to promote them, preserving drafts and composition in memory.
 
-The long-term experience prefers one persistent primary scene with the companion
-visually present for most core interactions. Timer, Tasks, History, Review, and
-Insights should be lightweight functional surfaces, potentially drawers,
-overlays, compact cards, side panels, or contextual controls. Do not require
-frequent navigation between themed rooms or a large independent Task Wall.
-Exact surfaces and layout remain art/interaction decisions for their roadmap
-stages. The first companion release prioritizes one polished default companion
-and one polished default environment. Profile/social features remain later scope.
+sceneNavigation owns hash/history. Routes represent Primary only. Aux operations
+write no URL; first open/promote/Primary swaps push; Primary close replaces with
+its successor or root. Collapse replaces root, Reveal is silent. Back/Forward
+selects Primary without restoring old layouts; root clears tools. Profile/unknown
+canonicalize root. Message collapse has no routing effect.
 
-## Approved future presentation lifetimes
+App retains fields, editor subview, selected target/durations, periods and page
+indices across slot movement. Full workflow unmount clears confirmations. Tasks
+and Review page one item; History one historical entry; Insights separates metric
+groups and pages trend/task groups. Task details/content/schedule and Focus timer/
+durations are separate presentation views. Existing mutations/queries remain.
+Operational failures stay in functional surfaces/Handle, never handwritten.
+The current-message strip shows deterministic expression outside the functional
+slot budget. Tool Collapse does not hide it; its own visibility controls attention.
+A future Message Board expansion remains deferred, without message persistence.
 
-One persistent App Shell / Main Scene does not mean one giant React component.
-The conceptual children are EnvironmentLayer, CompanionLayer, GlobalUiHandle,
-UtilityLaunchers, at most one primary functional card, and zero to two lightweight
-auxiliary bubbles. This is a hard cap, not a target; these production roles do not
-exist in v0.5. v0.7 has exactly Focus, Tasks, Review, History, Insights launchers.
-Application services and timer lifecycle must survive panel mounting changes.
-Routing may remain for compatibility, tests, development, and deep links; the
-future single navigation-to-UtilityState adapter must not replace the scene,
-recreate independent dashboard pages, or duplicate panel-state ownership.
-Exact hash/history behavior awaits implementation planning.
+Review service retains open/resolve/reload and summary/cohort semantics but no
+visible/dismiss/automatic enter API. Only explicit Primary Review entry opens the
+workflow; Compact Review has no workflow commands. Safe initial/date/focus reload and successful-write settlement remain
+separate workflow operations, never incidental Experience reads.
 
-Immersive / utility-ready / active-panel state controls presentation only.
-Use a discriminated state, not unrelated visibility booleans. Collapse hides
-the primary card, auxiliaries, and launchers; reveal restores launchers only,
-never the old panel. Immersive has only scene, Companion, and the tiny handle.
-No personalized messages remain visible in immersive v0.7.
-Non-destructive drafts generally survive temporary hiding/switching in memory,
-without autosave. Destructive confirmations require renewed intent after hiding.
-Review's durable cohort remains separate from panel visibility. No presentation
-transition may imply Task submission, Review resolution, Focus Pause/Reset, or
-confirmation. Detailed interaction and error contracts are in
-[Experience Contracts](docs/experience-contracts.md).
+History/Insights hooks subscribe/query only. One attachApplicationReads binding
+refreshes both services on initial load and existing safe browser signals/minute
+interval, independently of open cards. Existing successful-save refresh fanout
+is preserved, including Review settlement and checkpoint writes.
 
-Future functional-card visibility is UI state; deterministic expression bubbles
-remain Rules/Expression Intent concerns. Compact factual auxiliaries project
-existing facts read-only; operational errors/recovery/decisions remain locally
-anchored functional truth and outrank optional content. Do not merge these into
-a generic notification system. Consider renaming rule output `primary` to
-`primaryReaction` in production only if useful; no current rename or extra
-channels are approved without an independently managed lifetime need.
+loadExperienceFacts validates through load capability only. productionBridge
+subscribes to authoritative Timer and existing saved-read invalidation, coalesces
+notifications in a microtask, updates saved/live Context, then evaluates rules
+once. This avoids new saved completion + preceding Running-state observations.
+Display ticks use cheap live projections; saved facts refresh on invalidation or
+calendar rollover. Loading/ready/stale/unavailable stay distinct. Rules use
+primaryReaction and in-memory dedup/cooldown/expiry. No message history, event bus,
+aggregate storage or second Timer is introduced.
 
-Start with roughly two to three CSS-authored shared layouts, stable DOM/keyboard
-order, transforms/opacity, and protected art regions. No collision solver,
-physics, dragging, or generic layout engine. Defer per-scene metadata until a
-second real scene demonstrates need. Default glass uses CSS with a readable
-opaque fallback, never whole-content opacity; optional peripheral effects must
-not blur the app root, Companion face, or functional text. Selectable HTML owns
-UI/message text. Conceptual art layers and open rendering choices are preserved
-in [Art Direction](docs/art-direction.md), not a speculative asset architecture.
+Stable circular launchers and three authored functional slots preserve DOM order.
+Native pointer events snap between slots; Arrange controls provide a non-drag
+alternative. Reduced motion removes travel. Feature button/input styling is scoped; default dark glass has
+opaque fallback and readable foregrounds. The temporary structural SVG owns
+registered room/body/contact/expression/cat layers; CSS owns peripheral atmosphere.
+No rendering engine, asset pipeline, collision solver or per-scene metadata exists.
+Final art, visual acceptance and animation polish remain a separate checkpoint.
+Detailed contracts and asset handoff are in docs/experience-contracts.md and
+docs/art-direction.md. Schema v4 and the migration chain remain unchanged.
 
 Future Knowledge is independent from LLM/Agent capability and requires separate
 approval under PRODUCT/ROADMAP. No Knowledge schema, indexing/search, RAG,
@@ -803,34 +804,13 @@ do not force all preferences into schema v4 or invent per-component storage and
 a generic framework. Priority remains deferred: Closed is only grouping, and
 priority-aware ordering needs a separately approved domain/migration policy.
 
-## Known scene migration concerns in the current code
+## Remaining scene boundaries
 
-These are migration concerns, not current authorization to rewrite the core:
-
-- App.tsx swaps feature pages; Review may auto-open on safe entry and appear
-  alongside the selected page. The future scene requires intentional Review
-  opening and one major panel; current behavior remains unchanged.
-- Focus selection/settings drafts, Task forms, and confirmations have component
-  lifetimes. Panel integration must deliberately preserve useful drafts and
-  clear hidden destructive confirmations without mutating business data.
-- Storage errors currently sit above page content. Immersive mode needs
-  discoverable failure/retry state even when the utility layer is hidden.
-- History/Insights lifecycle refresh is tied to mounted hooks. Always-present
-  experience context needs read-only freshness independent of panel visibility,
-  including availability and local calendar context, not per-tick aggregation.
-- reviewService.reload() can settle and save a draft. It is not a pure read;
-  context collection must not call it merely to obtain facts. Existing shared
-  successful-write composition is workflow-aware and remains unchanged.
-- FocusPage.css includes global button/input rules that could style scene
-  controls accidentally. Scope ownership should be reviewed when rehosting UI.
-- Pre-start selected Task, captured Focus target, current Task state, and
-  immutable historical title are different facts and must remain distinct.
-- Task move() swaps adjacent items in the whole array. Future priority-group
-  movement and insertion rules cannot simply reuse that presentation unchanged.
-
-v0.6 provides contracts and an isolated prototype; this section remains the
-production-integration migration checklist, not a schema migration;
-production shell/routing/Review/error integration is v0.7 work after approval.
+Task move() still swaps the existing array; no Priority feature is introduced.
+Captured Focus target, current Task identity, selection and historical title
+remain distinct. Final art/contrast/viewport/focus acceptance still requires real
+browser checks. The scene does not change Timer cold/BFCache recovery or single-
+controlling-tab limits. No media-storage or future Knowledge design is implied.
 
 ---
 
@@ -1122,6 +1102,55 @@ It should not become fictional architecture for features that do not exist.
 ---
 
 # Current Architecture Summary
+
+## Baseline production Scene motion
+
+The three-slot Scene architecture passed user visual review. A basic motion pass
+now exists; final motion polish and production-art acceptance are still pending.
+`MainScene.css` centralizes fast/standard/slow durations (120/180/220ms) and enter,
+exit and movement easing. `scene/motion.ts` reads those tokens for local Web
+Animations, reduced-motion subscription and drawer/message visibility. Each
+animation has completion cleanup, a bounded timeout fallback and cancellation.
+The fallback never triggers a business action. Reduced motion uses immediate
+visual state changes and removes travel/scale; semantic focus never waits.
+
+BubbleWorkspace renders outer surfaces keyed by tool, with authored grid slots.
+Aux A (first auxiliary) occupies lower-right; Aux B occupies lower-left. This is
+transient presentation default only. `workspaceMotion.ts` takes local rects for
+FLIP continuity and freezes outgoing DOM paint for exits/content crossfades.
+React workflows unmount/change immediately; frozen copies are inert, aria-hidden,
+disabled, stripped of IDs/operational selectors, and have no React effects or
+handlers. Fourth-tool replacement exits before delayed incoming paint. Slot
+motion and presence never write routes, services, domain or persistence.
+
+`slotDrag.ts` validates gestures against current tool identity and authored slot
+rules. Pointer positions stay in refs and requestAnimationFrame DOM transforms,
+never App state. The lightweight title/material ghost has no interactive feature
+tree. Target highlighting, drop and cancel remain presentation only; Arrange
+controls are the non-drag alternative. Temporary artwork/camera are unchanged.
+
+Production art will retune this baseline. Art assets own the room/window,
+Companion, cat, desk props, expressions, steam/light and decoration. Functional
+cards, controls, forms, selectors, pagination, targets, labels, dynamic text and
+progress controls remain HTML/CSS, never baked images. No asset system or final
+production artwork is introduced by this pass.
+
+### Reserved future Media Surface (not implemented)
+
+An independent mini-player may sit below the functional workspace, outside all
+Primary/Aux slots and separate from CompanionMessage. About 1.5 Aux widths is a
+composition reference; its height is **not** constrained to be smaller than Aux.
+Final dimensions depend on media content and scene budget. Cover art, title,
+playback controls, progress and lightweight visualization are future scope.
+There is no visible placeholder, playback, storage model or media infrastructure.
+
+First music delivery should prefer app-owned sources: user-imported local audio
+or app-provided ambience/audio assets. External-player scraping/control (Bilibili,
+browser tabs, third-party desktop music apps or arbitrary system media sessions)
+is deferred. A future desktop/Tauri stage may evaluate OS media APIs separately.
+Later level/equalizer visualization should respond to actual playback/analyser
+data where technically appropriate, rather than fake random motion. Message
+Board/history is also deferred; neither reservation authorizes implementation.
 
 For the current development stage:
 

@@ -108,8 +108,9 @@ This direction preserves the core principle: Built for accountability, not atten
 The approved future experience is one persistent Main Scene / App Shell. Its
 default is Companion + Environment: the user remains in the same room while
 temporarily opening tools. Focus, Tasks, Review, History, Insights, and eventual
-Settings are secondary cards, drawers, overlays, or contextual panels. This
-direction is not implemented in the current v0.5 shell.
+Settings are secondary cards, drawers, overlays, or contextual panels. The v0.7 production
+scene integrates existing tools with temporary structural artwork; final art
+and visual acceptance remain pending.
 
 The Companion is the unique dominant visual focal point and primary visual /
 emotional anchor. The environment supports it; productivity UI remains
@@ -123,20 +124,36 @@ the persistent visual experience; a minimal Global UI Handle remains available
 to reveal controls. Utilities can retreat without requiring literally zero UI
 pixels. Opening a panel must leave the Companion visually meaningful.
 
-The future handle is one tiny, stationary, quiet upper-right/top-edge entry
-with a comfortably larger hit target, native button semantics, visible keyboard
-focus, and vertical Show controls / Hide controls meaning. Its exact mark is
-open; a rectangle, literal wind chime, dragging, or swinging is not required.
-Persistent errors may give it a subtle attention state.
-v0.7 has exactly five launchers: Focus, Tasks, Review, History, Insights.
-The discriminated immersive / utilityReady / activePanel(tool) state permits
-at most one primary functional card and zero to two subordinate auxiliary
-bubbles. This is a hard upper bound, not a target occupancy. Narrow screens
-normally suppress auxiliaries first. Reveal normally shows launchers only;
-collapse hides the card, auxiliaries, and launchers. Immersive contains only the
-scene, Companion, and handle; messages do not persist there in v0.7.
-Selecting another tool replaces the panel; selecting the active tool may close
-it. Reopening controls does not automatically restore the previous panel.
+The right-edge Tool Drawer uses a tiny, stationary native button with a larger
+comfortable hit target, visible focus and horizontal Show tools / Hide tools
+meaning: left reveals tools into the scene; right hides them toward the edge.
+Exactly five circular/soft launchers remain in stable positions and keyboard
+order: Focus, Tasks, Review, History, Insights. They never rearrange by tool.
+
+The functional BubbleWorkspace has three authored slots: Primary, Aux A and
+Aux B, holding at most three distinct user-opened tools. First opening occupies
+Primary, second Aux A (lower-right), third Aux B (lower-left). This opening-side
+default is presentation-only and not persisted. A fourth closed tool preserves Primary and
+replaces the least-recently-opened Auxiliary. Clicking an open launcher closes
+that tool. Closing Primary promotes the most recently active Auxiliary.
+Promotion swaps with Primary; pointer dragging and accessible slot actions swap
+slots without freeform coordinates, persistence or a window manager.
+
+Every tool has intentional PrimaryView / CompactView responsibilities. Primary
+provides richer controls, not just larger size. Compact removes secondary content
+and actions. Functional bubbles must not rely on internal vertical scrolling:
+use focused subviews and small paginated subsets, never miniature webpages.
+Desktop composition puts Primary above two lighter Aux surfaces, aiming around
+30% of viewport width and 60% of height. Narrow layouts prioritize usable Primary
+and tool access; suppress Aux surfaces rather than introducing nested scroll.
+
+CompanionMessageStrip is independent expression presentation, outside all three
+functional slots. Its narrow bottom composition has its own collapse/restore
+control and may remain visible when tools collapse. Tool Collapse clears the
+transient workspace; Reveal starts with launchers only. Neither message nor slot
+state is persisted. A later Message Board may expand previously surfaced approved
+expression content; it is deferred, with no history persistence, chat, LLM or
+Agent implemented now. Opening any overlay never reframes the scene.
 
 Hiding or switching utilities is a presentation action, not Task submission,
 Review resolution, Focus Pause/Reset, or destructive confirmation. Unfinished
@@ -267,16 +284,15 @@ Focus-time interruption avoidance, and suppression during user decisions.
 Opening the app must not replay historical events; missed reactions must not
 form a backlog, and ticks/checkpoints/reloads must not repeatedly trigger cues.
 
-Future expression bubbles may pair a stable low-weight ambient message with a
-limited event-bound acknowledgment, within the auxiliary cap. Use deterministic
-approved vocabulary, semantic keys/tightly defined parameters, and factual
-context. Personalized means context-appropriate, not emotional inference.
-No expandable conversation, freeform chat, message history, LLM, or Agent is
-approved. Text remains selectable HTML; handwriting is only for short optional
-copy, never instructions, numbers, errors, buttons, or accessibility-critical
-content. Baseline initialization and stale/error recovery are silent; hidden
-optional reactions never replay later. Operational feedback takes priority.
-Functional-card visibility remains UI state, separate from expression intent.
+The independent current-message strip renders short deterministic ambient copy
+or a limited event acknowledgment. It does not consume a functional Auxiliary
+slot; primaryReaction is an Experience concept, distinct from PrimarySlot.
+Use approved vocabulary, semantic keys and factual context, without emotional
+inference. Text remains selectable HTML; handwriting belongs only to optional
+copy, never errors, instructions or controls. Baseline and recovery are silent;
+hidden reactions do not replay. Operational feedback stays in functional UI.
+The later Message Board direction is deferred; no message history, conversation,
+chat, LLM or Agent is implemented or authorized by this UI correction.
 
 Quiet Feedback Language has four levels: Ambient cue (low weight, no action),
 Context hint (local, informative, non-blocking), Decision prompt (explicit local

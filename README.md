@@ -2,32 +2,61 @@
 
 Built for accountability, not attention.
 
-The approved long-term direction is Companion + Environment + Atmosphere,
-supported by reliable lightweight productivity tools. A persistent personal
-focus scene and quiet virtual companion are future experience stages; they are
-not implemented in v0.5. The current pages are a foundation for validating the
-productivity core. See PRODUCT.md and ROADMAP.md for the revised staging.
+The approved direction is Companion + Environment + Atmosphere, supported by
+reliable lightweight tools. v0.1-v0.5 business core is complete. v0.7 production
+integration through Checkpoint E now replaces the page shell with one persistent
+Main Scene. Artwork is temporary structural SVG; final production art and visual
+acceptance are pending. v0.7 is not complete.
 
-v0.1-v0.5 are completed. v0.6 Experience Contracts & Art Direction adds tested
-read-only contracts and an isolated fixture prototype; browser acceptance is pending.
-See [Experience Contracts](docs/experience-contracts.md) and
-[Art Direction](docs/art-direction.md) for approved future boundaries. Production
-Main Scene integration remains v0.7, with atmosphere/personalization in v0.8.
+## Production scope: v0.7 Checkpoints A-E
 
-## Production scope: v0.5 — Insights Core
-
-A local, single-user React + TypeScript + Vite application with a responsive
-shell, hash navigation for Focus / Tasks / History / Insights / Profile, a light visual
-foundation, explicit domain types, and browser-local persistence.
+Local, single-user React + TypeScript + Vite with schema v4 persistence. The
+production scene hosts exactly Focus / Tasks / Review / History / Insights,
+one Primary and up to two Compact functional tools in authored slots. The stable
+right-edge Show tools / Hide tools drawer uses circular named launchers. First
+opening becomes Primary; next two become Aux A/B; a fourth replaces the oldest
+opened Aux. Clicking an open launcher closes it. Closing Primary promotes the
+most recently active Aux. Promote/Arrange/pointer dragging swap authored slots.
+The independent bottom CompanionMessageStrip has its own collapse control and
+can remain visible when tools collapse. No message history/board is implemented.
+Profile is removed; its old route redirects to the scene.
 
 Focus includes a timestamp-based timer with Focus, Short break, and Long break
 modes; Start, Pause, Resume, and Reset; duration configuration; and completion
 feedback. Tasks includes basic local task management and optional Task-to-Focus
 binding. History and Daily Review preserve outcomes. Insights adds read-only
-factual summaries and a compact seven-day Focus trend. Profile remains a
-placeholder. There is no editable profile, account, networking, social, or
-Companion functionality. v0.5 and its terminology clarification passed manual
-acceptance as reported by the user.
+factual summaries and a compact seven-day Focus trend. Deterministic Companion
+presence/messages consume read-only facts and existing live Timer state.
+Message copy is provisional. No accounts, networking, social features, media,
+customization, Knowledge, LLM, or Agent is implemented.
+
+### Scene navigation and transient state
+
+`#/` (or empty hash) starts with closed tools. Tool hashes hydrate that tool in
+Primary with empty Aux slots. Unknown/Profile hashes replace root. First opening,
+promotion and Primary-changing swaps push the Primary hash. Aux operations do
+not write history. Closing Primary replaces the URL with its promoted successor
+(or root). Collapse clears slots/replaces root; Reveal starts empty. Back/Forward
+selects Primary without reconstructing historical compositions. Message visibility
+has no URL effect.
+
+Draft fields/editor subview, Focus selection/durations/view, periods and pagination
+survive promotion/demotion/Close/Collapse in memory. Task/Review Save/Cancel clears
+the editor; refresh clears transient presentation state. Full-workflow unmount
+clears destructive confirmations. Existing Timer retry intents stay service-owned.
+
+Primary tools use focused content, not scrolling pages: Tasks/Review show one item,
+Task editing splits Details/Content/Schedule, Focus splits Timer/Durations, History
+pages entries, Insights selects coherent metric groups and pages day/task detail.
+Compact views are reduced implementations. Functional bubbles have no internal
+vertical scrolling. Narrow/short layouts suppress Aux, with a Primary selector
+for accessing open tools. Optional message presentation is suppressed there.
+
+App retains one Timer lifecycle, read-refresh binding and production bridge.
+Historical reads remain fresh with closed tools; display ticks do not recompute
+history. Compact Review cannot open/settle/resolve a cohort. Only explicit Primary
+entry uses workflow open; existing App maintenance remains independent. Errors
+stay operational in tool surfaces/Handle and never become Companion copy.
 
 ## Tasks behavior
 
@@ -68,7 +97,8 @@ No suppression preference or notification framework is included.
 
 This is an intentionally basic validation UI; v0.4 manual acceptance passed.
 There are no recurring tasks, subtasks, reminders, attachments, rich text, audit
-framework, drag/drop, or companion/scene features.
+framework or Task-list drag/drop. Functional scene-slot dragging is separate
+presentation behavior.
 
 ## History and Daily Review
 
@@ -82,9 +112,10 @@ nothing, and distinguishes empty history from an empty selected period.
 
 Review collects open date tasks before today and date ranges ending before today.
 Unscheduled/current/future/completed/dropped tasks are excluded, including expired
-time windows on the current day. A fresh safe app document prompts once; Dismiss
-does not resolve work. A visible pending-work button reopens Review. Navigation,
-background changes, and ticks do not repeatedly prompt; date changes update eligibility.
+time windows on the current day. Pending work is indicated quietly; Review opens
+only through its launcher or explicit deep link. Closing/collapsing does not
+resolve work. Safe entry/date/focus settlement remains workflow-aware and does
+not automatically open a card or create a new cohort.
 
 A bounded review draft survives reload. Complete records now, Move requires an
 explicit changed valid schedule that is no longer overdue (including deliberate
@@ -199,27 +230,28 @@ recovery, and reference-time advancement. The normal `/` entry remains the
 production application. No config or package-script change is required.
 
 The separate entry renders one original layered SVG human companion in a daylight study room,
-a Show/Hide controls handle, six lightweight launchers, and one fixture panel.
+a Show/Hide controls handle, five lightweight launchers, and one fixture panel.
 Task draft text survives switching/collapse in memory; destructive confirmation
 does not. These panels are interaction/composition samples, not working tools.
-Settings is a placeholder. No fixture, draft, reaction, or utility state is saved.
+The former Settings placeholder was removed for shared five-tool compatibility.
+No fixture, draft, reaction, or utility state is saved.
 The normal production build excludes this entry and artwork.
 The six launchers, rectangular handle, grid, daylight SVG, and card dimensions
 describe this prototype only. The approved future production direction in
 [Art Direction](docs/art-direction.md) and [Experience Contracts](docs/experience-contracts.md)
-supersedes those choices; v0.7 is not implemented.
+supersedes those choices; production integration now uses temporary structural layers.
 
 Pure contracts in `src/experience` distinguish live/pending timer state, committed
 facts, selected/captured/current/historical Task identity, and data availability.
 The thin read-only coordinator separates live ticks from saved aggregation.
 Deterministic rules produce semantic presence, optional acknowledgment, and
 optional Review cue without business commands or psychological inference.
-Production integration remains v0.7; schema v4 and all business behavior remain
-unchanged. See [Experience Contracts](docs/experience-contracts.md) and
-[prototype acceptance steps](docs/art-direction.md#browser-acceptance-checklist).
+Production integration through Checkpoint E is implemented; schema v4 and
+business semantics are preserved. See [Experience Contracts](docs/experience-contracts.md) and
+[prototype acceptance steps](docs/art-direction.md#isolated-prototype-browser-acceptance-checklist).
 
-v0.6 automated verification passes 324 tests across 27 files, typecheck, lint,
-and production build. Both development entries serve successfully. No enabled
+Earlier v0.6 automated verification passed 324 tests across 27 files, typecheck,
+lint, and production build. Both development entries serve successfully. No enabled
 browser-control surface was available during implementation, so visual hierarchy,
 real keyboard/focus behavior, responsive/zoom/reduced-motion rendering, browser
 storage before/after, and console acceptance are not claimed as verified.
@@ -270,11 +302,12 @@ real sleep/wake, or storage-denial manual testing is claimed by this closeout.
 ## Structure and persistence
 
 - `src/app`: application shell, navigation, and shared service composition.
-- `src/features`: Focus, Tasks, History, Review, Insights, and a Profile placeholder.
+- `src/features`: existing Focus, Tasks, History, Review and Insights content/services.
 - `src/domain`: domain contracts and pure timer, Task, calendar, and Insights queries.
 - `src/storage`: storage interface, defaults, localStorage adapter, and tests.
 - `src/styles`: CSS tokens and global styles.
-- `src/experience`: pure read-only context, utility states, rules, and tests; not wired into production.
+- `src/experience`: read-only context, rules, utility states, production bridge and provisional messages.
+- `src/scene`: stable artwork, ToolDrawer, three-slot workspace, independent messages, scoped CSS/tests.
 - `src/prototypes/main-scene` and `prototypes/main-scene`: isolated development prototype.
 
 The adapter uses the localStorage key `focus-companion:data` with
@@ -327,3 +360,14 @@ server is unavailable.
 
 Product scope and architectural direction are defined in `PRODUCT.md`,
 `ROADMAP.md`, and `ARCHITECTURE.md`.
+
+## v0.7 engineering/art handoff
+
+Checkpoints A-E are delivered; final-art replacement/polish is explicitly outside
+this pass. The structural scene proves layer ownership and occlusion only.
+See [final-art export handoff](docs/art-direction.md#production-art-export-handoff)
+for registered assets, transparency, variants and crop guidance. Full v0.7 visual
+acceptance is unavailable until approved exports are integrated. Browser/desktop
+control was unavailable in this pass; actual browser keyboard, responsive/zoom,
+contrast, performance and storage observation remain manual checks. Automated
+verification results are reported separately; no new manual acceptance is claimed.

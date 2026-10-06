@@ -42,7 +42,7 @@ describe('isolated prototype state and markup', () => {
   it.each(utilityTools)('renders exactly one %s panel with native launchers and Hide semantics', (tool) => {
     const html = markup({ ...initialPrototypeState(), utility: { kind: 'activePanel', tool } })
     expect(html).toContain('aria-label="Hide controls" aria-expanded="true"')
-    expect(html.match(/data-launcher=/g)).toHaveLength(6)
+    expect(html.match(/data-launcher=/g)).toHaveLength(5)
     expect(html.match(/data-panel=/g)).toHaveLength(1)
     expect(html).toContain(`data-panel="${tool}"`)
     expect(html).not.toContain('aria-modal="true"')
@@ -59,10 +59,10 @@ describe('isolated prototype state and markup', () => {
   it('batches simultaneous fixture commits and never retriggers reconstructed snapshots', () => {
     const runtime = createPrototypeRuntime(() => new Date(2026, 9, 6, 12).getTime())
     runtime.setScenario('focus-running'); runtime.commit('both')
-    expect(runtime.getSnapshot().intent.primary?.kind).toBe('focusAcknowledgment')
+    expect(runtime.getSnapshot().intent.primaryReaction?.kind).toBe('focusAcknowledgment')
     expect(runtime.getSnapshot().reactionCount).toBe(1)
     runtime.refresh(); runtime.refresh(); runtime.advance(11_000); runtime.refresh()
-    expect(runtime.getSnapshot().intent.primary).toBeNull()
+    expect(runtime.getSnapshot().intent.primaryReaction).toBeNull()
     expect(runtime.getSnapshot().reactionCount).toBe(1)
   })
   it('exposes English factual copy and a quiet Review cue without opening Review', () => {

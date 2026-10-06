@@ -105,8 +105,8 @@ export default function PrototypeScene({ intent }: { intent: ExpressionIntent })
       </g>
     </svg>
     {intent.ambient && <div className="ambient-note" aria-label="Review pending"><span aria-hidden="true">◇</span> A little work to revisit</div>}
-    {intent.primary && <p className="companion-acknowledgment" role="status" key={`${intent.primary.kind}:${intent.primary.factId}`}>
-      {intent.primary.kind === 'focusAcknowledgment' ? 'Focus session saved.' : 'Task completion saved.'}
+    {intent.primaryReaction && <p className="companion-acknowledgment" role="status" key={`${intent.primaryReaction.kind}:${intent.primaryReaction.factId}`}>
+      {intent.primaryReaction.kind === 'focusAcknowledgment' ? 'Focus session saved.' : 'Task completion saved.'}
     </p>}
   </div>
 }

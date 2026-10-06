@@ -22,9 +22,18 @@ function add(f: ReturnType<typeof fixture>, title = 'Read') {
   const result = f.tasks.create({ ...input, title }); if (!result.ok) throw Error(result.message); return result.id
 }
 describe('resumable Daily Review', () => {
+  it('construction and safe reload do not create a cohort; opening is explicit', () => {
+    const f = fixture(); add(f)
+    const before = f.stored(), r = f.review()
+    r.reload()
+    expect(f.stored()).toEqual(before)
+    expect(r.getSnapshot()).not.toHaveProperty('visible')
+    expect(r.open()).toBe(true)
+    expect(f.stored().activeReview).not.toBeNull()
+  })
   it('atomically completes, moves, drops and derives only real linked counts', () => {
     const f = fixture(), a = add(f), b = add(f, 'Move'), c = add(f, 'Drop')
-    const r = f.review(); r.enter()
+    const r = f.review(); r.open()
     const draft = f.stored().activeReview!
     expect(draft.taskIds).toEqual([a, b, c])
     expect(r.resolve(draft.id, a, { type: 'complete' })).toBe(true)
@@ -40,7 +49,7 @@ describe('resumable Daily Review', () => {
     expect(f.stored().taskEvents).toHaveLength(3)
   })
   it('rejects invalid, unchanged and still-overdue schedules and allows explicit Unscheduled', () => {
-    const f = fixture(), a = add(f), r = f.review(); r.enter()
+    const f = fixture(), a = add(f), r = f.review(); r.open()
     const draft = f.stored().activeReview!
     for (const schedule of [input.schedule, { kind: 'date' as const, date: '2026-10-05', timeRange: null },
       { kind: 'date' as const, date: '2026-02-29', timeRange: null }]) {
@@ -51,23 +60,21 @@ describe('resumable Daily Review', () => {
     expect(f.stored().taskEvents[0]).toMatchObject({ type: 'taskRescheduled', previousSchedule: input.schedule,
       taskSnapshot: { schedule: { kind: 'unscheduled' } } })
   })
-  it('dismisses without resolving, resumes after reload, and does not grow an active cohort', () => {
-    const f = fixture(), a = add(f), r = f.review(); r.enter()
+  it('retains an unresolved cohort while closed and resumes after reload, and does not grow an active cohort', () => {
+    const f = fixture(), a = add(f), r = f.review(); r.open()
     const draft = f.stored().activeReview!
-    r.dismiss(); r.reload()
-    expect(r.getSnapshot().visible).toBe(false)
+    r.reload()
     expect(f.stored().activeReview).toEqual(draft)
     const b = add(f, 'New overdue'); r.reload()
     expect(f.stored().activeReview?.taskIds).toEqual([a])
-    const cold = f.review(); cold.enter()
-    expect(cold.getSnapshot().visible).toBe(true)
+    const cold = f.review(); cold.open()
     expect(f.stored().activeReview?.id).toBe(draft.id)
     cold.resolve(draft.id, a, { type: 'drop' })
     cold.open()
     expect(f.stored().activeReview?.taskIds).toEqual([b])
   })
   it('skips outside resolutions without fake review actions and cancels an untouched empty draft', () => {
-    const f = fixture(), a = add(f), r = f.review(); r.enter()
+    const f = fixture(), a = add(f), r = f.review(); r.open()
     const draft = f.stored().activeReview!
     f.tasks.setCompleted(a, true); r.reload()
     expect(f.stored().activeReview).toBeNull(); expect(f.stored().reviews).toEqual([])
@@ -75,7 +82,7 @@ describe('resumable Daily Review', () => {
     expect(reviewSummary(f.stored().taskEvents, draft.id).reviewed).toBe(0)
   })
   it('finishes a real review when remaining work is deleted outside it, preserving history', () => {
-    const f = fixture(), a = add(f), b = add(f, 'Other'), r = f.review(); r.enter()
+    const f = fixture(), a = add(f), b = add(f, 'Other'), r = f.review(); r.open()
     const draft = f.stored().activeReview!
     r.resolve(draft.id, a, { type: 'complete' }); f.tasks.delete(b); r.reload()
     expect(f.stored().reviews).toHaveLength(1)
@@ -85,7 +92,7 @@ describe('resumable Daily Review', () => {
     expect(f.stored().taskEvents).toEqual(events); expect(f.stored().reviews).toEqual(reviews)
   })
   it('preserves draft/task/history on failed actions and retries once without duplicates', () => {
-    const f = fixture(), a = add(f), r = f.review(); r.enter()
+    const f = fixture(), a = add(f), r = f.review(); r.open()
     const before = f.stored(), draft = before.activeReview!
     f.fail(true)
     expect(r.resolve(draft.id, a, { type: 'drop' })).toBe(false)
@@ -96,20 +103,19 @@ describe('resumable Daily Review', () => {
     expect(r.resolve(draft.id, a, { type: 'drop' })).toBe(false)
     expect(f.stored().taskEvents).toHaveLength(1); expect(f.stored().reviews).toHaveLength(1)
   })
-  it('refreshes date eligibility without reopening a dismissed panel, and preserves live timer data', () => {
-    const f = fixture(), a = add(f), r = f.review(); r.enter(); r.dismiss()
+  it('refreshes date eligibility without creating another cohort, and preserves live timer data', () => {
+    const f = fixture(), a = add(f), r = f.review(); r.open()
     f.timer.start(a)
     const timer = f.stored().timer
     r.resolve(f.stored().activeReview!.id, a, { type: 'complete' })
     expect(f.stored().timer).toEqual(timer)
     f.at(new Date(2026, 9, 7, 12).getTime()); r.reload()
-    expect(r.getSnapshot().visible).toBe(false)
     f.timer.checkpoint()
     expect(f.stored().reviews).toHaveLength(1); expect(f.stored().taskEvents).toHaveLength(1)
   })
   it('removes externally moved/dropped/deleted tasks from the queue', () => {
     for (const action of ['move', 'drop', 'delete']) {
-      const f = fixture(), a = add(f), r = f.review(); r.enter()
+      const f = fixture(), a = add(f), r = f.review(); r.open()
       if (action === 'move') f.tasks.update(a, { ...input, schedule: { kind: 'unscheduled' } })
       if (action === 'drop') f.tasks.drop(a)
       if (action === 'delete') f.tasks.delete(a)
@@ -118,7 +124,7 @@ describe('resumable Daily Review', () => {
     }
   })
   it('excludes already acted-on tasks if reopened during the same review', () => {
-    const f = fixture(), a = add(f), b = add(f, 'Other'), r = f.review(); r.enter()
+    const f = fixture(), a = add(f), b = add(f, 'Other'), r = f.review(); r.open()
     const draft = f.stored().activeReview!
     r.resolve(draft.id, a, { type: 'complete' }); f.tasks.setCompleted(a, false)
     expect(reviewQueue(f.stored().tasks, f.stored().taskEvents, draft, r.getSnapshot().today).map((task) => task.id)).toEqual([b])

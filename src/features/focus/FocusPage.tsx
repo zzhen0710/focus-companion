@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Settings } from '../../domain/settings'
 import type { Task } from '../../domain/task'
@@ -6,6 +6,8 @@ import { modeLabels, remainingMs } from '../../domain/timer'
 import type { TimerMode } from '../../domain/timer'
 import type { TimerController, TimerSnapshot } from './timerController'
 import './FocusPage.css'
+import { durationDraft } from '../../app/toolPresentation'
+import type { DurationDraft } from '../../app/toolPresentation'
 
 const durationFields = [
   { key: 'focusDurationSeconds', label: 'Focus' },
@@ -13,14 +15,12 @@ const durationFields = [
   { key: 'longBreakDurationSeconds', label: 'Long break' },
 ] as const
 
-function DurationSettings({ settings, disabled, controller }: {
-  settings: Settings; disabled: boolean; controller: TimerController
+function DurationSettings({ settings, disabled, controller, draft: controlledDraft, onDraft }: {
+  settings: Settings; disabled: boolean; controller: TimerController; draft?: DurationDraft | null; onDraft?: (draft: DurationDraft) => void
 }) {
-  const [draft, setDraft] = useState(() => ({
-    focusDurationSeconds: String(settings.focusDurationSeconds / 60),
-    shortBreakDurationSeconds: String(settings.shortBreakDurationSeconds / 60),
-    longBreakDurationSeconds: String(settings.longBreakDurationSeconds / 60),
-  }))
+  const [localDraft, setLocalDraft] = useState(() => durationDraft(settings))
+  const draft = controlledDraft ?? localDraft
+  const setDraft = (value: DurationDraft) => { if (onDraft) onDraft(value); else setLocalDraft(value) }
   const [message, setMessage] = useState('')
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -61,12 +61,19 @@ function DurationSettings({ settings, disabled, controller }: {
   )
 }
 
-export default function FocusPage({ snapshot, controller, tasks }: {
+export default function FocusPage({ snapshot, controller, tasks, selectedTask: controlledSelection, onSelection, durations, onDurations, onDecisionChange, view: controlledView, onView }: {
   snapshot: TimerSnapshot; controller: TimerController; tasks: Task[]
+  selectedTask?: string; onSelection?: (id: string) => void; durations?: DurationDraft | null; onDurations?: (draft: DurationDraft) => void; onDecisionChange?: (active: boolean) => void
+  view?: 'timer' | 'durations'; onView?: (view: 'timer' | 'durations') => void
 }) {
-  const [selectedTask, setSelectedTask] = useState('')
+  const [localView, setLocalView] = useState<'timer' | 'durations'>('timer')
+  const view = controlledView ?? localView, setView = onView ?? setLocalView
+  const [localSelection, setLocalSelection] = useState('')
+  const selectedTask = controlledSelection ?? localSelection
+  const setSelectedTask = (id: string) => { if (onSelection) onSelection(id); else setLocalSelection(id) }
   const [targetMessage, setTargetMessage] = useState('')
   const [confirmReset, setConfirmReset] = useState(false)
+  useEffect(() => { onDecisionChange?.(confirmReset); return () => onDecisionChange?.(false) }, [confirmReset, onDecisionChange])
   const primaryButton = useRef<HTMLButtonElement>(null)
   const resetButton = useRef<HTMLButtonElement>(null)
   const data = snapshot.data
@@ -106,11 +113,15 @@ export default function FocusPage({ snapshot, controller, tasks }: {
   }
 
   return (
-    <section className="page" aria-labelledby="focus-heading">
-      <p className="eyebrow">Make room for focused work</p>
-      <h1 id="focus-heading">One thing at a time.</h1>
-      <p className="page-intro">A calm place to return to what matters.</p>
-      <div className="timer-card">
+    <section className="page" aria-labelledby="focus-heading" onKeyDown={(event) => {
+      if (event.key === 'Escape' && confirmReset && (event.target as HTMLElement).tagName !== 'SELECT') {
+        event.preventDefault(); event.stopPropagation(); setConfirmReset(false); resetButton.current?.focus()
+      }
+    }}>
+      <h2 id="focus-heading" className="scene-sr-only">Focus timer</h2>
+      <nav className="bubble-subviews" aria-label="Focus views"><button aria-pressed={view === 'timer'} onClick={() => setView('timer')}>Timer</button>
+        <button aria-pressed={view === 'durations'} disabled={active} onClick={() => setView('durations')}>Durations</button></nav>
+      {view === 'timer' || active ? <div className="timer-card">
         <fieldset className="mode-selector" disabled={active || disabled}>
           <legend>Period mode</legend>
           {(Object.keys(modeLabels) as TimerMode[]).map((mode) => <label key={mode}>
@@ -120,7 +131,7 @@ export default function FocusPage({ snapshot, controller, tasks }: {
           </label>)}
         </fieldset>
         {timer.mode === 'focus' && <div>
-          {active ? <p>Focus target: {timer.taskTitleSnapshot ?? (timer.taskId
+          {active ? <p className="one-line" title={timer.taskTitleSnapshot ?? ''}>Focus target: {timer.taskTitleSnapshot ?? (timer.taskId
             ? `Current task: ${tasks.find((task) => task.id === timer.taskId)?.title ?? 'Unavailable task'}` : 'No task')}</p>
             : <label>Focus task<select value={selectedTask} disabled={disabled} onChange={(event) => setSelectedTask(event.target.value)}>
               <option value="">No task</option>
@@ -132,7 +143,7 @@ export default function FocusPage({ snapshot, controller, tasks }: {
         <output className="timer-display" role="timer" aria-live="off" aria-label="Remaining time">{display}</output>
         <p className="timer-status" role="status">{status}</p>
         {timer.status === 'paused' && <p className="timer-note" role="status">
-          Paused at saved progress. Time while the page is away is not counted. Resume when ready.
+          Paused at saved progress. Time away is not counted. Resume when ready.
         </p>}
         <div className="timer-controls">
           <button ref={primaryButton} className="primary-button" type="button" disabled={disabled} onClick={() => {
@@ -150,9 +161,7 @@ export default function FocusPage({ snapshot, controller, tasks }: {
         {active && confirmReset && <p className="timer-note" role="status">
           Abandon this unfinished period? Focus time of at least one full second will be saved as interrupted. Breaks create no record.
         </p>}
-        <p className="timer-note">Periods start manually. Reset retains meaningful Focus time as interrupted.</p>
-      </div>
-      <DurationSettings settings={settings} disabled={active || disabled} controller={controller} />
+      </div> : <DurationSettings settings={settings} disabled={active || disabled} controller={controller} draft={durations} onDraft={onDurations} />}
     </section>
   )
 }

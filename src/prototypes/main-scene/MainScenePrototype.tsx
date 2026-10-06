@@ -9,7 +9,7 @@ import { createPrototypeRuntime, denseRows, historyRows, scenarios, taskRows } f
 import type { PrototypeSnapshot, Scenario } from './fixtures'
 import PrototypeScene from './PrototypeScene'
 
-const labels = { focus: 'Focus', tasks: 'Tasks', review: 'Review', history: 'History', insights: 'Insights', settings: 'Settings' }
+const labels = { focus: 'Focus', tasks: 'Tasks', review: 'Review', history: 'History', insights: 'Insights' }
 function minutes(ms: number) {
   const seconds = Math.ceil(ms / 1000)
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
@@ -126,7 +126,6 @@ export function MainSceneView({ state, snapshot, onAction, onDraft, onDecision, 
                 <div key={day}><span>{day}</span><span className="sample-bar" style={{ width: `${[55, 72, 35, 88, 48, 20, 65][index]}%` }} /><span>2 sessions</span></div>)}</div>
               <p className="panel-footnote">Illustrative metrics below Today focused test density; they are not live analytics.</p>
             </>}
-            {active === 'settings' && <><p>A place for future preferences.</p><p className="panel-footnote">This panel tests switching only. No settings are stored.</p></>}
           </div>
         </section>}
       </>}
@@ -181,7 +180,7 @@ export default function MainScenePrototype() {
         <button onClick={runtime.midnight}>Advance to midnight</button>
       </div>
       <output className="lab-observation">{snapshot.context.localDate} · {snapshot.context.dayPhase} · Saved: {snapshot.context.saved.status}
-        {' · '}Presence: {snapshot.intent.presence} · Primary: {snapshot.intent.primary?.kind ?? 'none'} · Reactions: {snapshot.reactionCount}</output>
+        {' · '}Presence: {snapshot.intent.presence} · Primary: {snapshot.intent.primaryReaction?.kind ?? 'none'} · Reactions: {snapshot.reactionCount}</output>
     </aside>}
   </div>
 }

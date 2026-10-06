@@ -20,11 +20,12 @@ These documents are the project's source of truth.
 
 The project is currently in:
 
-**v0.6 — Experience Contracts & Art Direction (implemented; browser acceptance pending)**
+**v0.7 — Production Main Scene (Checkpoints A-E integrated; final artwork pending)**
 
 v0.1-v0.5 provide the completed, accepted production business core. v0.6 adds
 pure contracts/rules and a separate in-memory Main Scene prototype only.
-Production integration remains v0.7 and requires explicit approval. Detailed
+Production integration through Checkpoint E is approved and delivered. Stop before
+final-art replacement/polish without separate user approval; v0.7 is not complete. Detailed
 contracts and prototype acceptance steps are in
 `docs/experience-contracts.md` and `docs/art-direction.md`.
 
@@ -49,7 +50,7 @@ Here, friends/companions means social relationships with real people. The future
 local virtual companion is a separate experience capability, planned for v0.7;
 do not implement it in the productivity-core stages. v0.2 is completed;
 v0.3 through v0.5 are completed and accepted. v0.5 provides the read-only
-aggregation layer. Do not start v0.7 without explicit approval.
+aggregation layer. Do not advance to final artwork or v0.8 without explicit approval.
 
 Tasks use floating local calendar schedules and persistent array order. Completed
 tasks remain editable; preserve lifecycle facts through the limited TaskEvents,
@@ -164,7 +165,7 @@ embedding business rules. Domain/application code must not depend on companion
 animations, room art, music, or rendering. Do not add companion domain models,
 speculative asset systems, or choose a rendering technology prematurely.
 
-The isolated v0.6 context is a curated read-only factual view, not raw AppData/service
+The v0.6 context and v0.7 production bridge provide a curated read-only factual view, not raw AppData/service
 objects. Facts and read-only Insights, plus live timer/selection state, feed
 Context -> Rules -> Expression Intent -> presentation. Distinguish committed,
 live, pending, historical, stale, and unavailable state; a failed read is not
@@ -200,30 +201,30 @@ reliable lightweight tools. From the companion stage, prefer one persistent
 primary scene with the companion occupying a major share of the composition;
 tools may use drawers, overlays, compact cards, or side panels.
 
-The approved future Companion is the unique dominant intentional focal subject,
-without a rigid screen percentage. The scene persists; the entire utility layer
-is dismissible except a minimal accessible top-edge/upper-right Global UI Handle
-that is tiny, stationary, quiet, and uses native button semantics, a larger hit
-target, visible focus, and vertical Show controls / Hide controls meaning. Its
-shape is open; no required rectangle, wind chime, dragging, or swinging.
-v0.7 has exactly Focus, Tasks, Review, History, Insights launchers; no Music,
-Ambience, Settings, Journal, More, or Knowledge launchers. Discriminated immersive,
-utilityReady, and activePanel(tool) states permit at most one primary functional
-card and zero to two subordinate auxiliary bubbles: hard cap, not target.
-Suppress auxiliaries first on narrow screens. Reveal shows launchers only;
-collapse hides the card, auxiliaries, and launchers, never restoring an old panel.
-Immersive v0.7 has only scene, Companion, and handle, no personalized messages.
-Utility hiding/switching must never
-perform business actions. Retain non-destructive drafts in memory and require
-renewed intent for hidden destructive confirmations. Future Review is opened
-intentionally, with quiet pending indication. Errors stay discoverable in
-immersive mode; ordinary background errors must not auto-open a large panel.
+The Companion remains the dominant subject. The authoritative Tool Drawer
+and three-slot contract in docs/experience-contracts.md, superseding
+earlier ROADMAP v0.7 launcher/message presentation wording. Version staging is unchanged.
+Production uses a stable right-edge
+horizontal Tool Drawer: Show tools points left, Hide tools right; five named
+circular launchers never re-layout by tool. BubbleWorkspace has Primary / Aux A /
+Aux B, maximum three distinct user-opened functional tools. First open is Primary;
+next two are Aux; fourth replaces oldest opened Aux. Close Primary promotes the
+most recently active Aux. Promotion/slot dragging/Arrange swaps tools without
+business actions. Never persist geometry or create a floating-window framework.
+Primary and Compact are explicit presentation densities, not scaled full pages.
+No functional bubble may rely on internal vertical scrolling: subdivide/paginate
+content. Narrow layouts suppress Aux with accessible promotion to Primary.
+CompanionMessageStrip is independent and outside the Aux budget, with its own
+collapse control; tool Collapse does not hide it. Message Board/history remains
+deferred. Preserve drafts across demotion and clear hidden destructive intent.
+Review workflow entry belongs only to explicit Primary entry, never Compact
+summary. Operational errors stay functional and discoverable, not handwritten.
 
 Quiet Feedback levels are Ambient cue, Context hint, Decision prompt, and
 Blocking error; importance determines visual weight. Explicit decisions stay
 locally anchored rather than disappearing as toasts; define behavior before art.
 v0.6 implements contracts and an isolated fixture prototype;
-production Main Scene/handle/panel integration remains v0.7. Layered 2D / 2.5D
+production Main Scene/handle/panel integration through Checkpoint E is implemented. Layered 2D / 2.5D
 is the first prototype preference, not a final rendering stack. Music/media,
 day/night, skins, and deeper personalization remain primarily v0.8.
 
@@ -232,14 +233,14 @@ nighttime study room with a secondary sleeping cat. Lavender/mauve, cream/amber,
 moonlight blue, and restrained green avoid monochrome purple. Protect face,
 hands/pose, cat, and desk activity; drink steam is thin and haze stays peripheral.
 Concept art is a north star, not exact assets, coordinates, typography, or UI copy.
-Use roughly two to three shared authored CSS layouts with stable DOM/keyboard
-order, latest-input-wins restrained motion, and reduced-motion alternatives;
+Use stable launcher positions and three authored functional slots with predictable
+DOM/keyboard order, restrained motion, and reduced-motion alternatives;
 no physics/collision/layout engine. Default readable glass and practical static
 steam/light belong to v0.7; configurable presets/media remain primarily v0.8.
 Follow docs/art-direction.md and docs/experience-contracts.md for full contracts.
 
-Functional-card visibility stays UI state; factual auxiliaries, deterministic
-expression, and operational feedback remain distinct. Operational feedback wins
+Functional slot state, deterministic MessageStrip expression and operational
+feedback remain distinct presentation responsibilities. Operational feedback wins
 over optional content. Messages use approved vocabulary and selectable HTML,
 no persisted conversation, emotional inference, LLM, or Agent. Optional hidden
 reactions never replay later. Do not add expression channels before independent
@@ -250,7 +251,8 @@ indexing/search, RAG, embeddings, vector storage, or AI infrastructure now.
 Deferred Priority is P1/P2/P3 (P1 highest), with manual order within groups;
 Closed is UI grouping for completed/dropped, never a domain status. Domain,
 migration/default, movement, and insertion policies need separate planning.
-Priority/drag improvements are not v0.6 delivery or prerequisites for v0.7.
+Task priority/list drag improvements remain deferred; approved functional-slot
+dragging is a separate v0.7 presentation interaction.
 Preserve keyboard ordering alternatives. Future unified Settings keeps business,
 UI, experience, and media preferences distinct; no schema-v4 catch-all or
 premature framework. Duplicate-warning suppression needs separate approval.
@@ -337,7 +339,7 @@ policy blocks `npm.ps1`.
 The isolated development URL is `/prototypes/main-scene/`; `?lab=1` exposes
 in-memory scenarios. It must not import production bootstrap/service composition,
 instantiate storage, call workflow/mutation APIs, or write browser storage.
-Keep production runtime/config/package files unchanged. Schema remains v4 with
+For prototype-only changes, keep production runtime/config/package files unchanged. Schema remains v4 with
 the existing v1 -> v2 -> v3 -> v4 chain. Do not add it as a production build input.
 Prototype timing (3-second primary, 10-second cooldown, 30-second freshness,
 Review cue once per page) and day phases are tuning conventions, not final policy.
@@ -358,3 +360,59 @@ choose the simple solution if it preserves a reasonable future replacement bound
 Design for extension.
 
 Do not prematurely build the extension.
+
+## Delivered v0.7 integration constraints
+
+App is stable; services remain singletons and useFocusTimer runs once at App
+lifetime, independent of cards. MainScene never bootstraps services. Exactly five
+tools share one hash adapter, representing Primary only. Aux composition is
+transient and URL-silent. First open/promote/Primary swaps push; Primary close
+replaces with successor/root. Collapse clears slots and replaces root, Reveal
+starts empty without restoring tools. Back/Forward selects routed Primary only.
+
+App retains transient drafts; confirmations unmount on navigation/hiding.
+Review service no longer owns visible/dismiss/enter presentation. Only explicit
+Review Primary entry/deep link calls open(); Compact Review never opens/settles; existing safe settlement/reload remains
+workflow-aware. Never use it to collect Experience facts. History/Insights hooks
+subscribe/query only; attachApplicationReads owns their browser freshness.
+
+The load-only bridge batches saved/live updates in a microtask before rules,
+uses primaryReaction, and never adds per-display-tick history aggregation.
+Message-hidden/narrow/short reactions are suppressed/consumed without replay.
+Tool collapse alone does not suppress the independently visible MessageStrip.
+Errors outrank optional content. Temporary structural SVG and provisional copy
+are not release art/personality. Preserve schema v4, packages/lock, domain and
+Timer behavior. Art handoff is in docs/art-direction.md; no v0.7 release entry yet.
+
+## Baseline Scene motion boundary
+
+The corrected Scene structure passed user visual review; the basic motion pass
+is implemented, with separate browser motion acceptance still required. This is
+baseline motion, not final polish or v0.7 completion. First Aux A opens on the
+lower-right; Aux B opens lower-left. This is an authored, non-persisted default,
+not a Settings feature. Preserve fixed launcher positions and keyboard order.
+
+Scene-local CSS tokens own timing/easing. CSS interaction transitions and local
+Web Animations helpers provide drawer/message presence, tool-keyed slot FLIP,
+inert frozen exit/content copies and a non-interactive pointer-following ghost.
+Business state, routes and focus change immediately. No workflow stays alive for
+an exit; copies have no React effects/handlers, IDs or focusable controls. Clean
+copies/animations with completion, bounded timeout fallback and disposal. Honor
+reduced motion without spatial travel/scale/stagger or delayed semantic focus.
+Never persist animation phases, geometry or drag coordinates. Retune baseline
+motion against final production art; do not polish temporary scene art.
+
+Functional UI remains HTML/CSS: cards, buttons, tabs, forms, selectors, pagination,
+drag targets, labels, dynamic text and progress controls. Room/window, Companion,
+cat, props, expression overlays, steam/light and decoration belong to later art
+assets; never bake functional bubbles into images.
+
+Future independent Media Surface is outside Primary/Aux and CompanionMessage.
+Its width may be about 1.5 Aux widths; height is not required to be smaller than
+Aux. Final composition/content decides dimensions within scene budget. No media
+placeholder/playback now. Prefer app-owned/imported local audio or app ambience
+assets for first music delivery; external-player scraping/control and arbitrary
+system media sessions are deferred. Desktop/Tauri OS-media APIs require separate
+evaluation. A future lightweight equalizer should use actual playback/analyser
+data where appropriate; no fake-random visualizer now. No Message Board/history,
+chat, LLM or Agent is implemented by motion work.

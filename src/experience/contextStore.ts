@@ -4,7 +4,7 @@ import type { Available, LiveFocus, SavedContext, SavedFacts, TaskIdentity } fro
 
 export type FactsLoad = { status: 'ready'; facts: SavedFacts } | { status: 'unavailable'; error: string }
 
-/** A read-only validation coordinator, intentionally unwired from production. */
+/** A read-only factual coordinator shared by fixtures and the production bridge. */
 export function createExperienceContextStore(load: () => FactsLoad, clock: () => number = Date.now) {
   let saved: Available<SavedContext> = { status: 'loading' }
   let tasks: Available<readonly TaskIdentity[]> = { status: 'loading' }

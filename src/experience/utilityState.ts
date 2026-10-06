@@ -1,4 +1,4 @@
-export const utilityTools = ['focus', 'tasks', 'review', 'history', 'insights', 'settings'] as const
+export const utilityTools = ['focus', 'tasks', 'review', 'history', 'insights'] as const
 export type UtilityTool = typeof utilityTools[number]
 export type UtilityState = { kind: 'immersive' } | { kind: 'utilityReady' } | { kind: 'activePanel'; tool: UtilityTool }
 export type UtilityAction = { type: 'reveal' | 'collapse' | 'close' } | { type: 'activate'; tool: UtilityTool }
