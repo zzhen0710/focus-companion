@@ -47,7 +47,7 @@ export default function App() {
   const [messageCollapsed, setMessageCollapsed] = useState(false)
   const [decisionActive, setDecisionActive] = useState(false)
   const [pageVisible, setPageVisible] = useState(() => document.visibilityState === 'visible')
-  const [narrow, setNarrow] = useState(() => window.matchMedia('(max-width: 760px), (max-height: 700px)').matches)
+  const [narrow, setNarrow] = useState(() => window.matchMedia('(max-width: 900px), (max-height: 700px)').matches)
   const workspace = route.workspace, active = workspace.slots.primary
   const compactInsights = useMemo(() => insights.facts ? queryInsights(insights.facts, insightPeriod, insights.context) : null, [insights, insightPeriod])
   const saved = experience.context.saved
@@ -68,7 +68,7 @@ export default function App() {
   }, [bridge, navigation, pageVisible, decisionActive, error, narrow, messageCollapsed])
   useEffect(() => {
     const visible = () => setPageVisible(document.visibilityState === 'visible')
-    const media = window.matchMedia('(max-width: 760px), (max-height: 700px)')
+    const media = window.matchMedia('(max-width: 900px), (max-height: 700px)')
     const resize = () => setNarrow(media.matches)
     document.addEventListener('visibilitychange', visible); media.addEventListener('change', resize)
     return () => { document.removeEventListener('visibilitychange', visible); media.removeEventListener('change', resize) }

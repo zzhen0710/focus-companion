@@ -2,3 +2,6 @@ node_modules/
 dist/
 *.tsbuildinfo
 *.local
+
+# Local production tooling; candidates may later move to a standalone repository.
+.local-tools/

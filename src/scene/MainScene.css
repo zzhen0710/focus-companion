@@ -10,7 +10,8 @@
 }
 .scene-artwork, .scene-ui, .scene-periphery { position: absolute; inset: 0; }
 .scene-artwork { pointer-events: none; overflow: hidden; }
-.scene-artwork svg { width: 100%; height: 100%; object-fit: cover; }
+.scene-camera { position: absolute; inset: 0; }
+.scene-master { display: block; width: 100%; height: 100%; object-fit: cover; }
 .scene-periphery { box-shadow: inset 0 0 65px 10px rgb(12 12 24 / 25%); }
 .scene-ui { pointer-events: none; }
 .scene-ui button, .scene-ui summary, .functional-bubble, .drawer-error, .companion-message { pointer-events: auto; }
@@ -131,7 +132,7 @@
 .companion-message button { width: 32px; height: 32px; padding: 0; flex-shrink: 0; }
 .scene-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 1100px) { .bubble-workspace { width: min(430px, 44vw); } }
-@media (max-width: 760px), (max-height: 700px) {
+@media (max-width: 900px), (max-height: 700px) {
   .workspace-slot.auxiliaryA, .workspace-slot.auxiliaryB { display: none; }
   .slot-grip { display: none; }
   .narrow-tool-switcher { position: absolute; top: 64px; right: 14px; display: flex; align-items: center; gap: 8px; pointer-events: auto; font-size: .75rem; }
@@ -140,15 +141,42 @@
   .companion-message { display: none; }
   .scene-launchers { gap: 4px; right: 50px; }
 }
-@media (max-width: 760px) {
-  .scene-artwork svg { width: 160svh; min-width: 100%; height: 100%; position: absolute; left: 50%; transform: translateX(-35%); }
-  .bubble-content { font-size: .75rem; }
-  .bubble-content .timer-display { font-size: 2rem; }
-  .bubble-header { padding: 6px 10px; }
-}
-@media (max-width: 760px) and (min-height: 701px) {
-  .bubble-workspace { top: auto; bottom: 24px; }
-  .slot-menu > div { top: auto; bottom: 35px; }
+@media (max-width: 900px) {
+  /* Navigation, registered scene, then tool: only the document scrolls. */
+  .main-scene { display: flex; flex-direction: column; height: auto; min-height: 100svh; overflow-x: clip; }
+  .scene-ui { display: contents; }
+  .tool-drawer { position: relative; order: 1; padding-top: 112px; z-index: 2; }
+  [data-tools-expanded="false"] .tool-drawer { padding-top: 68px; }
+  #scene-tools { position: static; }
+  .drawer-error { position: relative; inset: auto; width: auto; margin: 0 12px 12px; }
+  .scene-artwork {
+    position: relative; inset: auto; order: 2; flex: none;
+    width: min(100%, 640px); margin-inline: auto;
+    aspect-ratio: var(--camera-width) / var(--camera-height);
+  }
+  /* One proportional camera for every registered descendant, including future layers. */
+  .scene-camera {
+    inset: auto;
+    width: calc(100% * var(--scene-width) / var(--camera-width));
+    height: calc(100% * var(--scene-height) / var(--camera-height));
+    left: calc(-100% * var(--camera-x) / var(--camera-width));
+    top: calc(-100% * var(--camera-y) / var(--camera-height));
+  }
+  .bubble-workspace {
+    position: relative; inset: auto; order: 3; flex: none;
+    width: min(560px, calc(100% - 24px)); max-width: none; margin: 16px auto 24px;
+  }
+  .empty-slot { display: none; }
+  .bubble-content { font-size: .9375rem; }
+  .bubble-content label { flex-wrap: wrap; }
+  .bubble-content .task-editor label { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .bubble-content :is(button, select, textarea, input:not([type="radio"]):not([type="checkbox"])) { font-size: 1rem; min-height: 44px; }
+  .bubble-actions > button, .bubble-actions summary { min-width: 44px; min-height: 44px; }
+  .bubble-content .mode-selector label { min-height: 44px; }
+  /* Launcher hints must not cover or intercept the current Primary selector. */
+  .narrow-tool-switcher { font-size: .875rem; z-index: 2; background: #30283e; }
+  .narrow-tool-switcher select { min-height: 44px; }
+  .scene-launchers { z-index: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .main-scene { --motion-fast: 0ms; --motion-standard: 0ms; --motion-slow: 0ms; }

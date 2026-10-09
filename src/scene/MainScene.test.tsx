@@ -19,7 +19,7 @@ describe('three-slot scene structure', () => {
     expect(html).toContain('data-message-strip'); expect(html).toContain('One thing at a time.')
     expect(html).not.toContain('data-functional-tool')
     expect(html).toContain('id="scene-tools" inert="" aria-hidden="true" data-visible="false"')
-    expect(html).toContain('Temporary structural artwork')
+    expect(html).toContain('assets/scene/scene_master.png')
   })
   it.each(utilityTools)('uses five stable named round launchers with %s Primary', (tool) => {
     const state = transitionWorkspace(emptyWorkspace(), { type: 'activate', tool }), html = markup(state)
@@ -38,9 +38,20 @@ describe('three-slot scene structure', () => {
     expect(html.match(/data-view="compact"/g)).toHaveLength(2)
     expect(html).toContain('Compact insights'); expect(html).toContain('Promote to Primary')
     expect(html).toContain('Move to Aux B'); expect(html).toContain('Drag Tasks between slots')
-    const art = (text: string) => text.slice(text.indexOf('<svg'), text.indexOf('</svg>') + 6)
+    const art = (text: string) => text.match(/<img class="scene-master"[^>]*>/)?.[0]
+    expect(art(html)).toBeDefined()
     expect(art(html)).toBe(art(markup(emptyWorkspace())))
     expect(html).not.toContain('role="region"')
+  })
+  it('uses one non-draggable master in the shared camera without structural SVG layers', () => {
+    const html = markup(emptyWorkspace())
+    expect(html.match(/class="scene-master"/g)).toHaveLength(1)
+    expect(html).toContain('width="2560" height="1440" draggable="false"')
+    expect(html).toContain('--scene-width:2560;--scene-height:1440')
+    expect(html).toContain('--camera-x:400;--camera-y:40;--camera-width:1440;--camera-height:1280')
+    expect(html).toContain('data-scene-camera')
+    expect(html).not.toContain('Temporary structural artwork')
+    expect(html).not.toContain('data-art-layer="companion-body"')
   })
   it('collapses/restores only the current-message strip, with no history/board', () => {
     const render = (collapsed: boolean) => renderToStaticMarkup(<CompanionMessageStrip message={{ key: 'neutralAmbient', text: 'Current only' }} collapsed={collapsed} onToggle={() => {}} />)
